@@ -4,10 +4,10 @@
 <style>
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#08090b;color:#e9eaed;font:16px system-ui,Arial,sans-serif}a{color:inherit}
 header{display:flex;justify-content:space-between;align-items:center;padding:12px clamp(16px,4vw,70px);border-bottom:1px solid #3a3c41;background:#0a0b0e;gap:18px}
-header img{width:220px;max-width:48vw;display:block}nav{display:flex;gap:24px;align-items:center}nav a{text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.08em}nav a:hover{color:white}
+header>a{display:block;width:220px;overflow:hidden;flex-shrink:0}header img{width:143%;max-width:none;display:block;margin-left:-43%;mix-blend-mode:screen}nav{display:flex;gap:24px;align-items:center}nav a{text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.08em}nav a:hover{color:white}
 .hero{min-height:78vh;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;text-align:left;padding:60px 20px 80px;background:linear-gradient(90deg,rgba(5,6,8,.82),rgba(5,6,8,.23) 70%),url("assets/jwc-hero.png") center/cover no-repeat,#11161c}
 .hero-photo{display:none}.hero-content{display:contents}
-.hero-logo{display:block;width:min(650px,82vw);height:auto;object-fit:contain;filter:drop-shadow(0 12px 35px #000)}
+.hero-logo{display:block;width:min(650px,82vw);height:auto;object-fit:contain;mix-blend-mode:screen}
 .line{height:1px;width:min(550px,80%);background:linear-gradient(90deg,transparent,#d5d8dd,transparent);margin:24px 0}
 h1{font-size:clamp(22px,3.4vw,42px);letter-spacing:.22em;margin:0;font-weight:850}p{color:#c3c5c9;line-height:1.7}
 .actions{display:flex;gap:14px;justify-content:flex-start;flex-wrap:wrap;margin-top:24px}
@@ -16,7 +16,7 @@ h1{font-size:clamp(22px,3.4vw,42px);letter-spacing:.22em;margin:0;font-weight:85
 .info{padding:60px 22px;text-align:center;border-top:1px solid #303238;background:#101115}.info h2{font-size:24px;letter-spacing:.14em;margin:0 0 12px}.info a{font-weight:700}
 footer{padding:25px 20px;text-align:center;color:#9a9da3;border-top:1px solid #303238;font-size:13px}
 @media(max-width:800px){
-header{padding:12px 16px;gap:12px}header img{width:150px;max-width:38vw}nav{gap:12px}nav a{font-size:11px;letter-spacing:.04em}
+header{padding:12px 16px;gap:12px}header>a{width:clamp(116px,34vw,170px)}header img{width:143%;max-width:none}nav{gap:12px}nav a{font-size:11px;letter-spacing:.04em}
 .hero{min-height:0;padding:0;background:#0a0b0e;display:block}
 .hero-photo{display:block;width:100%;height:auto;aspect-ratio:2/1;object-fit:contain}
 .hero-content{display:block;padding:28px 20px 36px;border-bottom:1px solid #303238}
