@@ -1,41 +1,24 @@
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const vm = require('node:vm');
-const cells = new Map();
-const address = (r,c) => `${r}:${c}`;
-let released = 0, lastRow = 1;
-const sheet = {
-  getLastRow: () => lastRow,
-  getRange(r,c,n=1) {
-    return {
-      getValues: () => Array.from({length:n},(_,i)=>[cells.get(address(r+i,c))]),
-      getValue: () => cells.get(address(r,c)),
-      setValue(v) { cells.set(address(r,c),v); lastRow=Math.max(lastRow,r); return this; },
-      setValues(rows) { rows.forEach((row,i)=>row.forEach((v,j)=>cells.set(address(r+i,c+j),v))); lastRow=Math.max(lastRow,r+rows.length-1);return this; },
-      setFormula(f) { cells.set(address(r,c),f);return this; }
-    };
-  }
-};
-const context = vm.createContext({
-  PropertiesService:{getScriptProperties:()=>({getProperty:()=> 'test-sheet'})},
-  SpreadsheetApp:{openById:id=>{assert.equal(id,'test-sheet');return {getSheetByName:n=>{assert.equal(n,'Ticket Log');return sheet;}}},flush(){}},
-  LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){released++;}})},
-  console
-});
-vm.runInContext(fs.readFileSync(__dirname+'/Code.gs','utf8'),context);
-const t={id:'ticket-1',date:'2026-11-05',customer:'Weaver Group Ltd',truck:'823',driver:'Driver',hours:'8.5',job:'job-1',work:'=IMPORTXML("bad")',jeep:true};
-assert.equal(context.saveTickets([t]).saved,1);
-assert.equal(lastRow,2);
-assert.equal(cells.get('2:14'),'=H2');
-assert.equal(cells.get('2:12'),'\'=IMPORTXML("bad")');
-const submitted = cells.get('2:2');
-cells.set('2:14',1);cells.set('2:15',250);cells.set('2:17','INV-001');
-context.saveTickets([{...t,hours:'9',work:'Updated job'}]);
-assert.equal(lastRow,2);assert.equal(cells.get('2:8'),9);assert.equal(cells.get('2:2'),submitted);
-assert.equal(cells.get('2:14'),1);assert.equal(cells.get('2:15'),250);assert.equal(cells.get('2:17'),'INV-001');
-assert.equal(cells.get('2:16'),'=IF(OR(N2="",O2=""),"",N2*O2)');
-context.saveTickets([{...t,id:'ticket-2'},{...t,id:'ticket-2',hours:'10'}]);
-assert.equal(lastRow,3);assert.equal(cells.get('3:8'),10);
-assert.throws(()=>context.saveTickets([{...t,id:'ticket-3'},{...t,id:'bad',hours:'-1'}]));
-assert.equal(lastRow,3);assert.throws(()=>context.saveTickets([]));assert.equal(released,3);
-console.log('PASS: new ticket, idempotent update, billing preservation, batch deduplication, validation before writes, formula input escaping, lock release.');
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const cells=new Map();const key=(r,c)=>`${r}:${c}`;let lastRow=1,released=0;
+const sheet={getFilter:()=>null,getMaxColumns:()=>26,setColumnWidth(){},getLastRow:()=>lastRow,getRange(r,c,n=1,cols=1){
+ const range={setBackground(){return range},setFontColor(){return range},setFontWeight(){return range},setNumberFormat(){return range},getValues:()=>Array.from({length:n},(_,i)=>Array.from({length:cols},(_,j)=>cells.get(key(r+i,c+j))??'')),getValue:()=>cells.get(key(r,c)),setValue(v){cells.set(key(r,c),v);if(r>1)lastRow=Math.max(lastRow,r);return range},setValues(values){values.forEach((row,i)=>row.forEach((v,j)=>cells.set(key(r+i,c+j),v)));lastRow=Math.max(lastRow,r+values.length-1);return range},setFormula(v){cells.set(key(r,c),v);return range}};return new Proxy(range,{get(o,k){return k in o?o[k]:()=>range}});
+}};
+const context=vm.createContext({PropertiesService:{getScriptProperties:()=>({getProperty:()=> 'test-sheet'})},SpreadsheetApp:{openById:id=>{assert.equal(id,'test-sheet');return{getSheetByName:n=>{assert.equal(n,'Ticket Log');return sheet}}},flush(){}},LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){released++}})},console});vm.runInContext(fs.readFileSync(__dirname+'/Code.gs','utf8'),context);
+const t={id:'ticket-1',date:'2026-11-05',customer:'Weaver Group Ltd',truck:'823',driver:'Driver',hours:'8.5',job:'job-1',work:'=BAD()',jeep:true};
+assert.equal(context.saveTickets([t]).saved,1);assert.equal(lastRow,2);assert.equal(cells.get('2:14'),'=H2');assert.equal(cells.get('2:12'),"'=BAD()");assert.equal(cells.get('1:18'),'Permits');assert.equal(cells.get('1:19'),'Permit rate');
+const submitted=cells.get('2:2');cells.set('2:14',1);cells.set('2:15',250);cells.set('2:17','INV-001');
+context.saveTickets([{...t,hours:'9',work:'Updated'}]);assert.equal(lastRow,2);assert.equal(cells.get('2:8'),9);assert.equal(cells.get('2:2'),submitted);assert.equal(cells.get('2:14'),1);assert.equal(cells.get('2:15'),250);assert.equal(cells.get('2:17'),'INV-001');
+context.saveTickets([{...t,hourlyRate:'175.50',permits:true,permitRate:'80'}]);assert.equal(cells.get('2:15'),175.5);assert.equal(cells.get('2:18'),true);assert.equal(cells.get('2:19'),80);assert.equal(cells.get('2:14'),1);assert.equal(cells.get('2:17'),'INV-001');assert.equal(cells.get('2:16'),'=IF(OR(N2="",O2="",AND(R2=TRUE,S2="")),"",ROUND(N2*O2+IF(R2=TRUE,S2,0),2))');
+context.saveTickets([{...t,hourlyRate:'',permits:true,permitRate:''}]);assert.equal(cells.get('2:15'),175.5);assert.equal(cells.get('2:19'),80);
+context.saveTickets([{...t}]);assert.equal(cells.get('2:18'),true);assert.equal(cells.get('2:19'),80);
+context.saveTickets([{...t,hourlyRate:'0',permits:true,permitRate:'0'}]);assert.equal(cells.get('2:15'),0);assert.equal(cells.get('2:19'),0);
+context.saveTickets([{...t,permits:false}]);assert.equal(cells.get('2:18'),false);assert.equal(cells.get('2:19'),'');assert.equal(cells.get('2:15'),0);
+context.saveTickets([{...t,id:'ticket-2'},{...t,id:'ticket-2',hours:'10'}]);assert.equal(lastRow,3);assert.equal(cells.get('3:8'),10);
+for(const bad of [{hourlyRate:'-1'},{hourlyRate:'1.234'},{permitRate:'1',permits:false},{permits:'yes'},{permitRate:'NaN',permits:true}])assert.throws(()=>context.saveTickets([{...t,...bad}]));
+assert.throws(()=>context.saveTickets([{...t,id:'ticket-3'},{...t,id:'bad',hours:'-1'}]));assert.equal(lastRow,3);assert.throws(()=>context.saveTickets([]));
+const normalGetRange=sheet.getRange.bind(sheet);let expanded=false,removed=false;const kept={customer:'Weaver'};const restored=[];
+sheet.getFilter=()=>({getRange:()=>({getRow:()=>1,getColumn:()=>1,getNumColumns:()=>17,getNumRows:()=>1000}),getColumnFilterCriteria:c=>c===4?kept:null,remove(){removed=true;}});
+sheet.getRange=(r,c,n=1,cols=1)=>{if(r===1&&c===1&&n===1000&&cols===19)return{createFilter(){expanded=true;return{setColumnFilterCriteria:(column,criterion)=>restored.push([column,criterion])}}};return normalGetRange(r,c,n,cols);};
+context.saveTickets([{...t,id:'ticket-filter',hourlyRate:'125',permits:true,permitRate:'60'}]);assert(removed&&expanded);assert.equal(restored[0][0],4);assert.equal(restored[0][1],kept);sheet.getFilter=()=>null;sheet.getRange=normalGetRange;
+cells.set('1:18','Other business data');const before=cells.get('2:8');assert.throws(()=>context.saveTickets([{...t,hours:'100'}]));assert.equal(cells.get('2:8'),before);assert.equal(cells.get('1:18'),'Other business data');
+console.log('PASS: hourly rate writes existing Rate column; permits and rate stay separate; blank rates/manual billing preserved; zero amounts, retries, invalid inputs and occupied-column protection.');

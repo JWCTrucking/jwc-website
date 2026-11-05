@@ -40,6 +40,11 @@
 <div class="wide"><label for="work">Description of work <span class="optional">Optional</span></label><textarea id="work" placeholder="Describe the haul, locations, and any job notes"></textarea></div>
 </div></fieldset>
 
+<fieldset><legend>Rates &amp; permits <span class="optional">Optional</span></legend><div class="grid">
+<div><label for="hourlyRate">Hourly rate ($/hr) <span class="optional">Optional</span></label><input id="hourlyRate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Leave blank to enter in Sheets"></div>
+<div><div class="checks"><label><input type="checkbox" id="permits">Permits</label></div></div>
+<div id="permit-rate-field" hidden><label for="permitRate">Permit rate ($) <span class="optional">Optional</span></label><input id="permitRate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Permit amount for this ticket" disabled></div>
+</div></fieldset>
 <div class="savebar"><div class="savebar-inner"><p class="status" id="status" role="status" aria-live="polite"></p><button type="submit">Submit</button></div></div>
 </form>
 </section>
@@ -66,14 +71,21 @@
 <script>
 const $ = id => document.getElementById(id);
 const key = 'jwc-tickets-v1';
-const fields = ['date','customer','job','truck','driver','hours','work'];
+const fields = ['date','customer','job','truck','driver','hours','work','hourlyRate','permitRate'];
 let pendingId = null;
 function all() {
   try { const data = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(data) ? data : []; }
   catch { return []; }
 }
+function syncPermitField() {
+  $('permit-rate-field').hidden = !$('permits').checked;
+  $('permitRate').disabled = !$('permits').checked;
+  if (!$('permits').checked) $('permitRate').value = '';
+}
+$('permits').addEventListener('change',syncPermitField);
 function clearForm() {
   $('form').reset();
+  syncPermitField();
   const now = new Date();
   $('date').value = [now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
 }
@@ -86,7 +98,7 @@ $('form').onsubmit = event => {
   if (button.disabled) return;
   const ticket = {id:pendingId || crypto.randomUUID()};
   fields.forEach(field => ticket[field] = $(field).value);
-  ['jeep','booster','tridem'].forEach(field => ticket[field] = $(field).checked);
+  ['jeep','booster','tridem','permits'].forEach(field => ticket[field] = $(field).checked);
   const tickets = all();
   const index = tickets.findIndex(saved => saved.id === ticket.id);
   if (index >= 0) tickets[index] = ticket; else tickets.push(ticket);
