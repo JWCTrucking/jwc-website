@@ -23,8 +23,8 @@ h1{font-size:clamp(23px,5vw,36px);letter-spacing:.08em;line-height:1.25}
 .info{padding:40px 20px}.info h1,.info h2{font-size:21px;letter-spacing:.08em}
 }
 
-header>a::before{content:"";position:absolute;inset:18% 0 20%;z-index:1;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.45) 49%,transparent 63%);transform:translateX(-140%);mix-blend-mode:screen;animation:chrome-shine 8s ease-in-out infinite}
-header>a::after{content:"";position:absolute;top:37%;left:68%;width:18px;height:18px;pointer-events:none;z-index:2;background:radial-gradient(ellipse 12% 50%,white,transparent),radial-gradient(ellipse 50% 12%,white,transparent);opacity:0;animation:chrome-glint 8s ease-in-out infinite}
+header>a::before{content:"";position:absolute;inset:18% 0 20%;z-index:1;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.45) 49%,transparent 63%);transform:translateX(-140%);mix-blend-mode:screen;animation:chrome-shine 4s ease-in-out infinite}
+header>a::after{content:"";position:absolute;top:37%;left:68%;width:18px;height:18px;pointer-events:none;z-index:2;background:radial-gradient(ellipse 12% 50%,white,transparent),radial-gradient(ellipse 50% 12%,white,transparent);opacity:0;animation:chrome-glint 4s ease-in-out infinite}
 @keyframes chrome-shine{0%,65%{transform:translateX(-140%)}90%,100%{transform:translateX(140%)}}
 @keyframes chrome-glint{0%,77%,88%,100%{opacity:0;transform:scale(.4)}82%{opacity:.85;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){header>a::before,header>a::after,.hero-media::after{animation:none;opacity:0}.hero-media{animation:none;transform:none}}
