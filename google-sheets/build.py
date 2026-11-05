@@ -18,12 +18,20 @@ function deliverTicket(ticket, success, failure) {
 /* SHEETS_ADAPTER_END */"""
 html, count = re.subn(r'/\* SHEETS_ADAPTER_START \*/.*?/\* SHEETS_ADAPTER_END \*/', lambda _: adapter, html, flags=re.S)
 assert count == 1, 'Ticket adapter changed; update the Sheets build.'
+maintenance_adapter = """/* MAINTENANCE_ADAPTER_START */
+function deliverMaintenance(entry, success, failure) {
+  google.script.run.withSuccessHandler(success).withFailureHandler(failure).saveMaintenance(entry);
+}
+/* MAINTENANCE_ADAPTER_END */"""
+html, maintenance_count = re.subn(r'/\* MAINTENANCE_ADAPTER_START \*/.*?/\* MAINTENANCE_ADAPTER_END \*/', lambda _: maintenance_adapter, html, flags=re.S)
+assert maintenance_count == 1, 'Maintenance adapter changed; update the build.'
 output.write_text(html)
 print(output)
 
 # Single-file installer: one paste into Apps Script, with the current mobile form embedded.
 import json
 code = (root / 'google-sheets' / 'Code.gs').read_text()
+code += '\n' + (root / 'google-sheets' / 'Maintenance.gs').read_text()
 code += '\n' + (root / 'google-sheets' / 'Design.gs').read_text()
 code = code.replace("HtmlService.createHtmlOutputFromFile('Tickets')", 'HtmlService.createHtmlOutput(JWC_TICKET_HTML)')
 bundle = root / 'google-sheets' / 'JWC-Sheets-Setup.gs'
@@ -32,7 +40,8 @@ print(bundle)
 
 # Form-only update for an existing project: no setup/design functions to rerun or duplicate.
 runtime = (root / 'google-sheets' / 'Code.gs').read_text()
-runtime = runtime[runtime.index('function doGet()'):]
+runtime = runtime[runtime.index('function doGet('):]
+runtime += '\n' + (root / 'google-sheets' / 'Maintenance.gs').read_text()
 runtime = runtime.replace("HtmlService.createHtmlOutputFromFile('Tickets')", 'HtmlService.createHtmlOutput(JWC_TICKET_HTML)')
 update = root / 'google-sheets' / 'JWC-App-Update.gs'
 update.write_text(runtime + '\nconst JWC_TICKET_HTML = ' + json.dumps(html) + ';\n')

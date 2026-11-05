@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JWC Field App</title>
+
+<meta name="theme-color" content="#0b0c0f"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="JWC Field App"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box}html{scroll-padding-top:20px;scroll-padding-bottom:150px;color-scheme:dark}body{margin:0;background:#0b0c0f;color:#eee;font:16px system-ui,Arial,sans-serif}a{color:#e5e7eb}button,input,select,textarea{font:inherit}button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}header{padding:12px 16px;border-bottom:1px solid #30343b;display:flex;justify-content:space-between;align-items:center;gap:16px;background:#101216}header .brand{width:150px;overflow:hidden;mask-image:radial-gradient(ellipse,#000 40%,transparent 75%)}header .brand-logo{display:block;width:143%;height:auto;margin-left:-43%}header>a{padding:12px 4px;font-size:14px;text-decoration:none;font-weight:650}main{max-width:900px;margin:0 auto;padding:26px 16px 145px}.heading{display:flex;align-items:center;justify-content:space-between;gap:16px}h1{font-size:30px;letter-spacing:-.03em;margin:0}h2{font-size:22px;margin:0 0 18px}.subtitle{margin:8px 0 18px;color:#b8bec7;line-height:1.5}.note{padding:12px 14px;border:1px solid #3c424b;border-radius:8px;background:#171b21;color:#c4cad3;font-size:13px;line-height:1.6;margin:0 0 22px}.note summary{cursor:pointer;font-weight:650;min-height:24px}.note p{margin:10px 0 0}.panel{padding:20px 16px;border:1px solid #343a43;border-radius:12px;background:#13161b}fieldset{border:0;padding:0;margin:0 0 28px;min-width:0}fieldset:last-of-type{margin-bottom:0}legend{padding:0;margin-bottom:18px;color:#f2f3f5;font-size:18px;font-weight:750;width:100%}.section-number{color:#919aa8;font-size:12px;letter-spacing:.1em;margin-right:10px}.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}.grid>div{min-width:0}label,.field-label{display:block;font-size:14px;color:#dce1e8;font-weight:650;margin-bottom:8px}.optional{font-weight:400;color:#959fac;font-size:12px}input,select,textarea{scroll-margin-block:24px 150px;display:block;min-width:0;max-width:100%;width:100%;min-height:52px;background:#20252d;color:#fff;border:1px solid #525d6c;border-radius:8px;padding:14px 12px;font-size:16px}input[type=date]{appearance:none;-webkit-appearance:none;min-height:54px}textarea{min-height:140px;resize:vertical;line-height:1.5}input::placeholder,textarea::placeholder{color:#9ba5b2;opacity:1}input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #e0e5ec;outline-offset:3px}.wide{grid-column:1/-1}.checks{display:grid;grid-template-columns:1fr;gap:10px}.checks label{display:flex;align-items:center;gap:12px;margin:0;padding:13px 14px;min-height:52px;border:1px solid #525d6c;border-radius:8px;background:#20252d;cursor:pointer}.checks label:has(input:checked){border-color:#dde3ec;background:#303844}.checks input{appearance:auto;width:22px;height:22px;min-height:0;margin:0;flex-shrink:0;accent-color:#dce2eb}button:disabled{opacity:.7;cursor:wait}button{min-height:48px;padding:13px 16px;border:0;border-radius:8px;font-weight:750;cursor:pointer;background:linear-gradient(120deg,#9ca3ad,#f1f3f5,#a5adb7);color:#101216}.savebar{position:fixed;left:0;right:0;bottom:0;z-index:5;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#101216f5;border-top:1px solid #454e5b}.savebar-inner{max-width:868px;margin:auto}.savebar button{width:100%;min-height:54px;font-size:16px}.status{font-size:13px;line-height:1.45;color:#c3e5c8;margin:0 0 10px}.status:empty{display:none}
+@media(min-width:600px){main{padding-top:36px}.panel{padding:26px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.checks{grid-template-columns:repeat(3,minmax(0,1fr))}header{padding:12px max(24px,calc((100vw - 868px)/2))}}
+@media print{html{color-scheme:light}header,.savebar,.note,.subtitle{display:none!important}body{background:white;color:black}main{padding:0;max-width:none}.panel{border:0;background:white;padding:0}h1{margin-bottom:20px}legend,label,.field-label{color:black}.section-number,.optional{color:#555}.grid{grid-template-columns:1fr 1fr;gap:12px}fieldset{margin-bottom:20px;break-inside:avoid}input,select,textarea{color:black;border:0;border-bottom:1px solid #aaa;border-radius:0;background:white;padding:6px;min-height:32px}.checks{grid-template-columns:repeat(3,1fr)}.checks label{color:black;background:white;border:0;padding:4px}.checks label:has(input:checked){background:white}.checks input{accent-color:black}textarea{min-height:80px}.status{display:none}}
+[hidden]{display:none!important}.app-tabs{display:flex;gap:8px;margin:0 0 24px;padding:5px;border:1px solid #343a43;border-radius:10px;background:#14181e}.app-tabs a{flex:1;text-align:center;text-decoration:none;color:#aeb8c7;padding:14px 8px;border-radius:6px;font-weight:700;font-size:14px}.app-tabs a[aria-current="page"]{background:linear-gradient(120deg,#9ca3ad,#f1f3f5,#a5adb7);color:#101216}
+@media print{.app-tabs{display:none}}
+.connection{padding:14px 16px;background:#171c23;border:1px solid #424c59;border-radius:10px;margin-bottom:14px}.connection p{margin:0;line-height:1.5;font-size:14px}.connection #queue-count{margin-top:4px;color:#aeb8c7;font-size:12px}.install-help{font-size:13px;line-height:1.6;color:#b7c0cd;margin:0 0 22px}.install-help summary{cursor:pointer;min-height:32px}header button{min-height:44px;font-size:13px;padding:10px 12px}.app-tabs{margin-top:16px}
+</style>
+</head>
+<body data-initial-view="tickets">
+<header><div class="brand"><img class="brand-logo" src="../assets/jwc-logo.png" alt="JWC Contracting Ltd."></div><button type="button" id="connect-google">Connect Google</button></header>
+<main><section class="connection" aria-label="Connection status"><p id="sync-status" role="status" aria-live="polite">Loading saved submissions…</p><p id="queue-count">Checking device storage…</p></section><details class="install-help"><summary>Add to your home screen</summary><p>iPhone: open this page in Safari, tap Share, then Add to Home Screen. Android: open it in Chrome and choose Install app or Add to Home screen from the menu.</p><p>Use the app once online before relying on it offline. Saved records retry while the app is open and Google is connected. Reopen the app after service returns if it was closed.</p></details>
+<nav class="app-tabs" aria-label="App sections"><a href="#tickets" data-view="tickets" aria-current="page">Field ticket</a><a href="#maintenance" data-view="maintenance">Maintenance</a></nav>
+<div id="ticket-view">
+
+<div class="heading"><h1>Field Ticket</h1></div>
+<p class="subtitle">Enter the job details, then submit your ticket.</p>
+
+<section class="panel" aria-label="Ticket details">
+<form id="form">
+<fieldset><legend><span class="section-number">01</span>Job details</legend><div class="grid">
+<div><label for="date">Date</label><input id="date" type="date" required></div>
+<div><label for="customer">Customer</label><select id="customer" required><option value="">Select customer</option><option>Weaver Group Ltd</option><option>River Valley Energy Services</option><option>Ruel Concrete</option></select></div>
+<div class="wide"><label for="job">Job number <span class="optional">Optional</span></label><input id="job" placeholder="Enter job number"></div>
+</div></fieldset>
+<fieldset><legend><span class="section-number">02</span>Truck &amp; driver</legend><div class="grid">
+<div><label for="truck">Truck number</label><select id="truck" required><option value="">Select truck</option><option>820</option><option>822</option><option>823</option><option>824</option></select></div>
+<div><label for="driver">Driver name</label><select id="driver"><option>Jordan Cowan</option></select></div>
+<div class="wide"><label for="hours">Truck hours</label><input id="hours" type="number" min="0" step="0.25" inputmode="decimal" placeholder="e.g. 8.5" required></div>
+</div></fieldset>
+<fieldset><legend><span class="section-number">03</span>Equipment &amp; work</legend><div class="grid">
+<div class="wide"><span class="field-label" id="equipment-label">Equipment used</span><div class="checks" role="group" aria-labelledby="equipment-label"><label><input type="checkbox" id="jeep">Jeep</label><label><input type="checkbox" id="booster">Booster</label><label><input type="checkbox" id="tridem">Tridem</label></div></div>
+<div class="wide"><label for="work">Description of work <span class="optional">Optional</span></label><textarea id="work" placeholder="Describe the haul, locations, and any job notes"></textarea></div>
+</div></fieldset>
+
+<div class="savebar"><div class="savebar-inner"><p class="status" id="status" role="status" aria-live="polite"></p><button type="submit">Submit</button></div></div>
+</form>
+</section>
+
+</div>
+<div id="maintenance-view" hidden>
+<div class="heading"><h1>Maintenance</h1></div>
+<p class="subtitle">Record work done on a truck.</p>
+<section class="panel" aria-label="Maintenance details">
+<form id="maintenance-form">
+<fieldset><legend>Service details</legend><div class="grid">
+<div><label for="service-date">Date work was done</label><input id="service-date" type="date" required></div>
+<div><label for="service-truck">Truck number</label><input id="service-truck" list="service-trucks" placeholder="Enter truck number" required><datalist id="service-trucks"><option value="820"><option value="822"><option value="823"><option value="824"></datalist></div>
+<div><label for="service-type">Service</label><select id="service-type" required><option value="">Select service</option><option>Oil change</option><option>Greasing</option><option>Inspection</option><option>Repair</option><option>Other</option></select></div>
+<div><label for="service-person">Who did the work?</label><input id="service-person" autocomplete="name" placeholder="Name or shop" required></div>
+<div class="wide"><label for="service-odometer">Odometer (km) <span class="optional">Optional</span></label><input id="service-odometer" type="number" min="0" step="1" inputmode="numeric" placeholder="Truck mileage at service"></div>
+<div class="wide"><label for="service-work">Work done</label><textarea id="service-work" placeholder="Oil change, filters replaced, repairs, or other details" required></textarea></div>
+</div></fieldset>
+<div class="savebar"><div class="savebar-inner"><p class="status" id="maintenance-status" role="status" aria-live="polite"></p><button type="submit">Submit</button></div></div>
+</form>
+</section>
+</div>
+</main>
+<script src="config.js"></script><script src="app.js"></script></body></html>

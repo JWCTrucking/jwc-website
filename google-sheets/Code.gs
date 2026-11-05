@@ -25,7 +25,11 @@ function setupWorkbook() {
   refreshWorkbookDesign();
   console.log('Workbook: '+book.getUrl()); return book.getUrl();
 }
-function doGet() { return HtmlService.createHtmlOutputFromFile('Tickets').setTitle('JWC Field Tickets').addMetaTag('viewport','width=device-width, initial-scale=1, viewport-fit=cover'); }
+function doGet(e) {
+  const view=e && e.parameter && e.parameter.view==='maintenance'?'maintenance':'tickets';
+  const html=HtmlService.createHtmlOutputFromFile('Tickets').getContent().replace('data-initial-view="tickets"','data-initial-view="'+view+'"');
+  return HtmlService.createHtmlOutput(html).setTitle('JWC Field App').addMetaTag('viewport','width=device-width, initial-scale=1, viewport-fit=cover');
+}
 function safeCell(value) { const s=String(value ?? '').slice(0,5000); return /^[=+@\-]/.test(s) ? "'"+s : s; }
 function validateTicket(t) {
   if (!t || !/^[A-Za-z0-9_-]{1,100}$/.test(String(t.id)) || !/^\d{4}-\d{2}-\d{2}$/.test(String(t.date)) || !t.customer || !t.truck || t.hours === '' || !Number.isFinite(Number(t.hours)) || Number(t.hours)<0) throw new Error('Ticket is missing a valid ID, date, customer, truck, or hours.');
