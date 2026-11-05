@@ -2,7 +2,7 @@
   "id": "/app/",
   "name": "JWC Field App",
   "short_name": "JWC",
-  "description": "Welcome to JWC. Open Field Tickets or Maintenance.",
+  "description": "JWC field tickets and truck maintenance.",
   "start_url": "/app/",
   "scope": "/app/",
   "display": "standalone",
@@ -21,5 +21,9 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
   ]
 }

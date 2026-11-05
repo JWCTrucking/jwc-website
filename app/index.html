@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Welcome | JWC Field App</title>
+<title>JWC Field App</title>
 <meta name="theme-color" content="#08090b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="JWC Field App">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="jwc-icon-192.png"><link rel="apple-touch-icon" href="jwc-icon-192.png">
 <script>
@@ -69,9 +69,18 @@ try {
 @media(prefers-reduced-motion:reduce){.form-screen{animation:none}}
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.app-titlebar{display:none}
+@media(display-mode:window-controls-overlay){
+ .app-titlebar{display:flex;align-items:center;position:fixed;left:env(titlebar-area-x,0px);top:env(titlebar-area-y,0px);width:env(titlebar-area-width,100%);height:env(titlebar-area-height,32px);padding:0 16px;background:#08090b;color:#c4cbd5;font-size:12px;font-weight:600;z-index:200;-webkit-app-region:drag;app-region:drag;user-select:none}
+ body{padding-top:env(titlebar-area-height,0px)}
+ .app-shell{min-height:calc(100svh - env(titlebar-area-height,0px))}
+ .opening,.form-screen{top:env(titlebar-area-height,0px)}
+}
+
 </style>
 </head>
 <body>
+<div class="app-titlebar" aria-hidden="true">JWC Field App</div>
 <div class="opening" id="opening" aria-label="Welcome to JWC" role="status" aria-hidden="true"><div class="opening-letters" aria-hidden="true"><span>J</span><span>W</span><span>C</span></div><div class="opening-logo" aria-hidden="true"><div class="opening-logo-frame"><img src="../assets/jwc-logo.png" width="2048" height="663" alt="" fetchpriority="high"></div></div></div>
 <div class="app-shell" id="app-shell">
 <header><div class="brand"><img src="../assets/jwc-logo.png" width="2048" height="663" alt="JWC Contracting Ltd."></div></header>
