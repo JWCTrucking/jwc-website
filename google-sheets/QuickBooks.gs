@@ -12,8 +12,8 @@
  *  - Once an invoice is emailed, printed, paid (even partly) or voided, it is never touched again;
  *    the customer's next tickets start a new invoice.
  *  - Nothing is ever emailed, sent or charged to customers. Jordan reviews and sends in QuickBooks.
- *  - After the nightly run, Jordan gets a summary email (only when invoices changed, there is
- *    something new to review, or the sync failed).
+ *  - After the nightly run, Jordan's phone gets a ping from the JWC app ("Invoice alerts" screen,
+ *    owner code required). Email is only a backup: sync failures, new review items, or no phone set up.
  */
 const QBS_SHEET_ID = '1-9vgsLWZLjXDXYxb24oecuvYh8_C2Nr2NtXJ1RKxTE4';
 const QBS_TZ = 'America/Edmonton';
@@ -41,6 +41,7 @@ function qbsOnOpen() {
   SpreadsheetApp.getUi().createMenu('QuickBooks')
     .addItem('Connect QuickBooks', 'qbsConnect')
     .addItem('Sync invoices now', 'qbsSyncNow')
+    .addItem('Set up phone alerts', 'qbsShowPhoneAlerts')
     .addSeparator()
     .addItem('Show Intuit redirect URL', 'qbsShowRedirect')
     .addItem('Disconnect QuickBooks', 'qbsDisconnect')
@@ -108,7 +109,8 @@ function qbsNightlySync() {
   const p = PropertiesService.getScriptProperties();
   const fingerprint = report.problems.join('\n');
   const newProblems = fingerprint !== (p.getProperty('QB_LAST_PROBLEMS') || '');
-  if (report.invoices.length || (report.problems.length && newProblems)) qbsNotify_(report);
+  const pinged = report.invoices.length ? qbsPushAll_() : 0;
+  if ((report.invoices.length && !pinged) || (report.problems.length && newProblems)) qbsNotify_(report);
   p.setProperty('QB_LAST_PROBLEMS', fingerprint);
   return report.summary;
 }
@@ -504,3 +506,160 @@ function qbsCleanLine_(l) {
 }
 function qbsForm_(o) { return Object.keys(o).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(o[k])).join('&'); }
 function qbsEsc_(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c])); }
+
+/* ---------- Phone alerts (Web Push from the JWC app, no third-party service) ---------- */
+
+const QBS_PUSH_HOSTS = /^https:\/\/(fcm\.googleapis\.com|updates\.push\.services\.mozilla\.com|web\.push\.apple\.com|[a-z0-9.-]+\.push\.apple\.com|[a-z0-9.-]+\.notify\.windows\.com)\//;
+
+/** Run once (menu: Set up phone alerts). Creates this sheet's own alert keys and owner code. */
+function qbsSetupPush() {
+  const p = PropertiesService.getScriptProperties();
+  if (!p.getProperty('QB_VAPID_D')) {
+    const seed = Utilities.getUuid() + Utilities.getUuid() + Date.now() + Math.random();
+    const d = qbsMod_(qbsBytesToBig_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, seed)), QBS_EC.n - 1n) + 1n;
+    const pub = qbsEcMul_(d, QBS_EC.G);
+    p.setProperties({
+      QB_VAPID_D: d.toString(16),
+      QB_VAPID_PUB: qbsB64u_([4].concat(qbsBigToBytes_(pub.x, 32), qbsBigToBytes_(pub.y, 32))),
+    });
+  }
+  if (!p.getProperty('QB_NOTIFY_CODE')) p.setProperty('QB_NOTIFY_CODE', String(100000 + Math.floor(Math.random() * 900000)));
+  qbsPushStatus_();
+  return p.getProperty('QB_VAPID_PUB');
+}
+
+function qbsShowPhoneAlerts() {
+  qbsSetupPush();
+  const code = PropertiesService.getScriptProperties().getProperty('QB_NOTIFY_CODE');
+  SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(
+    '<div style="font:15px Arial;line-height:1.5">' +
+    '<p>On your phone, open the <b>JWC app</b> from the Home Screen → <b>Field Tickets</b> → scroll to the bottom → <b>Invoice alerts</b>.</p>' +
+    '<p>Enter this owner code and tap <b>Turn on alerts</b>, then <b>Allow</b>:</p>' +
+    '<p style="font:bold 30px monospace;letter-spacing:4px;margin:8px 0">' + qbsEsc_(code) + '</p>' +
+    '<p style="color:#555">You\'ll get a test ping right away. After that, a ping each night the invoices update.</p></div>'
+  ).setWidth(420).setHeight(300), 'Phone alerts');
+}
+
+/** Called by the web app receiver (doPost, kind "push"). */
+function qbsSavePushSubscription_(payload) {
+  const p = PropertiesService.getScriptProperties();
+  const code = p.getProperty('QB_NOTIFY_CODE');
+  if (!code || String(payload && payload.code).trim() !== code) throw new Error('Wrong owner code.');
+  const sub = payload.subscription || {};
+  if (typeof sub.endpoint !== 'string' || sub.endpoint.length > 1000 || !QBS_PUSH_HOSTS.test(sub.endpoint)) throw new Error('Unsupported phone.');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const subs = qbsPushSubs_().filter(s => s.endpoint !== sub.endpoint);
+    subs.push({endpoint: sub.endpoint, added: new Date().toISOString()});
+    p.setProperty('QB_PUSH_SUBS', JSON.stringify(subs.slice(-5)));
+  } finally { lock.releaseLock(); }
+  qbsPushOne_(sub.endpoint);
+  qbsPushStatus_();
+}
+
+function qbsPushSubs_() {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('QB_PUSH_SUBS') || '[]'); } catch (e) { return []; }
+}
+
+/** Pings every signed-up phone. Returns how many were reached. */
+function qbsPushAll_() {
+  const subs = qbsPushSubs_();
+  if (!subs.length || !PropertiesService.getScriptProperties().getProperty('QB_VAPID_D')) return 0;
+  let ok = 0;
+  const keep = subs.filter(s => {
+    const code = qbsPushOne_(s.endpoint);
+    if (code >= 200 && code < 300) ok++;
+    return code !== 404 && code !== 410; // phone unsubscribed or app removed
+  });
+  if (keep.length !== subs.length) {
+    PropertiesService.getScriptProperties().setProperty('QB_PUSH_SUBS', JSON.stringify(keep));
+    qbsPushStatus_();
+  }
+  return ok;
+}
+
+function qbsPushOne_(endpoint) {
+  const p = PropertiesService.getScriptProperties();
+  const aud = endpoint.match(/^https:\/\/[^/]+/)[0];
+  const jwt = qbsVapidJwt_(aud, BigInt('0x' + p.getProperty('QB_VAPID_D')));
+  try {
+    return UrlFetchApp.fetch(endpoint, {
+      method: 'post', muteHttpExceptions: true, payload: '',
+      headers: {TTL: '86400', Urgency: 'normal', Authorization: 'vapid t=' + jwt + ', k=' + p.getProperty('QB_VAPID_PUB')},
+    }).getResponseCode();
+  } catch (e) { return 0; }
+}
+
+function qbsPushStatus_() {
+  const p = PropertiesService.getScriptProperties();
+  const sheet = qbsTabs_(qbsBook_()).setup;
+  sheet.getRange(3, 4, 3, 2).setValues([
+    ['Phone alerts code', p.getProperty('QB_NOTIFY_CODE') || ''],
+    ['Phones getting alerts', qbsPushSubs_().length],
+    ['Alerts public key', p.getProperty('QB_VAPID_PUB') || ''],
+  ]);
+  sheet.getRange(3, 4, 3, 1).setFontWeight('bold').setFontColor('#e5e7eb');
+  sheet.getRange(3, 5, 3, 1).setFontColor('#e5e7eb');
+}
+
+function qbsVapidJwt_(aud, d) {
+  const enc = o => qbsB64u_(Utilities.newBlob(JSON.stringify(o)).getBytes());
+  const unsigned = enc({typ: 'JWT', alg: 'ES256'}) + '.' + enc({aud: aud, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: 'mailto:dispatch@jwchauling.com'});
+  return unsigned + '.' + qbsB64u_(qbsEcdsaSign_(Utilities.newBlob(unsigned).getBytes(), d));
+}
+
+/* P-256 ECDSA (ES256) with deterministic nonces (RFC 6979). Apps Script has no built-in EC signing. */
+const QBS_EC = {
+  p: 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffffn,
+  n: 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551n,
+  G: {x: 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296n, y: 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5n},
+};
+function qbsMod_(a, m) { const r = a % m; return r < 0n ? r + m : r; }
+function qbsInv_(a, m) {
+  let t = 0n, nt = 1n, r = m, nr = qbsMod_(a, m);
+  while (nr) { const q = r / nr; [t, nt] = [nt, t - q * nt]; [r, nr] = [nr, r - q * nr]; }
+  return qbsMod_(t, m);
+}
+function qbsEcAdd_(P, Q) {
+  const p = QBS_EC.p;
+  if (!P) return Q;
+  if (!Q) return P;
+  let l;
+  if (P.x === Q.x) {
+    if (qbsMod_(P.y + Q.y, p) === 0n) return null;
+    l = qbsMod_(3n * P.x * P.x - 3n, p) * qbsInv_(2n * P.y, p) % p;
+  } else {
+    l = qbsMod_(Q.y - P.y, p) * qbsInv_(Q.x - P.x, p) % p;
+  }
+  const x = qbsMod_(l * l - P.x - Q.x, p);
+  return {x: x, y: qbsMod_(l * (P.x - x) - P.y, p)};
+}
+function qbsEcMul_(k, P) {
+  let R = null, A = P;
+  while (k > 0n) { if (k & 1n) R = qbsEcAdd_(R, A); A = qbsEcAdd_(A, A); k >>= 1n; }
+  return R;
+}
+function qbsEcdsaSign_(msgBytes, d) {
+  const n = QBS_EC.n;
+  const h = qbsBytesToBig_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, msgBytes));
+  const x = qbsBigToBytes_(d, 32), h1 = qbsBigToBytes_(qbsMod_(h, n), 32);
+  const hmac = (key, data) => Utilities.computeHmacSha256Signature(qbsSigned_(data), qbsSigned_(key)).map(b => b & 255);
+  let V = new Array(32).fill(1), K = new Array(32).fill(0);
+  K = hmac(K, V.concat([0], x, h1)); V = hmac(K, V);
+  K = hmac(K, V.concat([1], x, h1)); V = hmac(K, V);
+  for (;;) {
+    V = hmac(K, V);
+    const k = qbsBytesToBig_(V);
+    if (k > 0n && k < n) {
+      const r = qbsMod_(qbsEcMul_(k, QBS_EC.G).x, n);
+      const s = qbsMod_(qbsInv_(k, n) * (h + r * d), n);
+      if (r !== 0n && s !== 0n) return qbsBigToBytes_(r, 32).concat(qbsBigToBytes_(s, 32));
+    }
+    K = hmac(K, V.concat([0])); V = hmac(K, V);
+  }
+}
+function qbsBytesToBig_(b) { let x = 0n; for (let i = 0; i < b.length; i++) x = (x << 8n) | BigInt(b[i] & 255); return x; }
+function qbsBigToBytes_(x, len) { const out = new Array(len); for (let i = len - 1; i >= 0; i--) { out[i] = Number(x & 255n); x >>= 8n; } return out; }
+function qbsSigned_(arr) { return arr.map(v => (v & 255) > 127 ? (v & 255) - 256 : (v & 255)); }
+function qbsB64u_(bytes) { return Utilities.base64EncodeWebSafe(qbsSigned_(Array.from(bytes))).replace(/=+$/, ''); }

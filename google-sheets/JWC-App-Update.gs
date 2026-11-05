@@ -92,6 +92,7 @@ function doPost(e) {
     result.id=packet.payload && packet.payload.id;
     if(packet.kind==='ticket')saveTickets([packet.payload]);
     else if(packet.kind==='maintenance')saveMaintenance(packet.payload);
+    else if(packet.kind==='push')qbsSavePushSubscription_(packet.payload);
     else throw new Error('Invalid submission type.');
     result.ok=true;
   } catch(error) {

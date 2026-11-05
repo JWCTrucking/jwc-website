@@ -63,6 +63,7 @@ function finalize(inv) {
   return inv;
 }
 function api(url, opts) {
+  if (url.startsWith('https://fcm.googleapis.com/')) { pushes.push({url, opts}); return {getResponseCode: () => pushStatus, getContentText: () => ''}; }
   const ok = body => ({getResponseCode: () => 200, getContentText: () => JSON.stringify(body)});
   if (url.includes('oauth2')) return ok({access_token: 'a', refresh_token: 'r', expires_in: 3600});
   const path = url.split('/company/realm1')[1].split(/[?&]minorversion/)[0];
@@ -96,13 +97,25 @@ function api(url, opts) {
 }
 
 const mail = [];
+const pushes = [];
+let pushStatus = 201;
+const nodeCrypto = require('node:crypto');
+const toSigned = a => Array.from(a, v => (v & 255) > 127 ? (v & 255) - 256 : (v & 255));
+const toBuf = v => typeof v === 'string' ? Buffer.from(v, 'utf8') : Buffer.from(Array.from(v, x => x & 255));
 const props = new Map([['QB_REALM_ID', 'realm1'], ['QB_REFRESH', 'r'], ['QB_ACCESS', 'a'], ['QB_EXPIRES', String(Date.now() + 3e6)]]);
 const context = vm.createContext({
   SpreadsheetApp: {openById: () => book, newDataValidation: () => new Proxy({}, {get: (t, p) => () => new Proxy({}, {get: () => function () { return this; }})})},
   PropertiesService: {getScriptProperties: () => ({getProperty: k => props.get(k) || null, setProperty: (k, v) => props.set(k, v), setProperties: o => Object.entries(o).forEach(([k, v]) => props.set(k, v)), deleteProperty: k => props.delete(k)})},
-  LockService: {getScriptLock: () => ({tryLock: () => true, releaseLock() {}})},
+  LockService: {getScriptLock: () => ({tryLock: () => true, waitLock() {}, releaseLock() {}})},
   UrlFetchApp: {fetch: api},
-  Utilities: {formatDate: d => d.toISOString().slice(0, 10), base64Encode: s => Buffer.from(s).toString('base64')},
+  Utilities: {
+    formatDate: d => d.toISOString().slice(0, 10), base64Encode: s => Buffer.from(s).toString('base64'),
+    DigestAlgorithm: {SHA_256: 'sha256'}, getUuid: () => nodeCrypto.randomUUID(),
+    computeDigest: (alg, v) => toSigned(nodeCrypto.createHash('sha256').update(toBuf(v)).digest()),
+    computeHmacSha256Signature: (v, k) => toSigned(nodeCrypto.createHmac('sha256', toBuf(k)).update(toBuf(v)).digest()),
+    base64EncodeWebSafe: b => toBuf(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_'),
+    newBlob: str => ({getBytes: () => toSigned(Buffer.from(str, 'utf8'))}),
+  },
   ScriptApp: {getScriptId: () => 'script1'},
   Session: {getEffectiveUser: () => ({getEmail: () => 'dispatch@jwchauling.com'})},
   MailApp: {sendEmail: m => mail.push(m)},
@@ -215,4 +228,38 @@ assert.equal(mail.length, 2, 'Failure emails Jordan');
 assert.match(mail[1].subject, /FAILED/);
 props.set('QB_REFRESH', 'r');
 
-console.log('PASS: nightly summary email (on change / failure only). PASS: rolling invoice per customer, name matching, GST, skips old/test/NO BILL rows, $0 + flag for missing rates, idempotent reruns, sheet rate updates, QuickBooks edits and manual lines preserved, sent invoices frozen, deleted invoices recovered, nothing sent to customers.');
+// 9. Phone alerts: keys, owner code, valid ES256 signature, ping instead of email.
+const pub = context.qbsSetupPush();
+const code = props.get('QB_NOTIFY_CODE');
+assert.match(code, /^\d{6}$/);
+assert.equal(context.qbsSetupPush(), pub, 'Keys are created once and kept');
+assert.throws(() => context.qbsSavePushSubscription_({code: '000000', subscription: {endpoint: 'https://fcm.googleapis.com/fcm/send/x'}}), /Wrong owner code/);
+assert.throws(() => context.qbsSavePushSubscription_({code, subscription: {endpoint: 'https://evil.example/push'}}), /Unsupported/);
+context.qbsSavePushSubscription_({code, subscription: {endpoint: 'https://fcm.googleapis.com/fcm/send/jordan-phone'}});
+assert.equal(pushes.length, 1, 'Test ping sent right after signing up');
+const auth = pushes[0].opts.headers.Authorization;
+const [, jwt, k] = auth.match(/^vapid t=([^,]+), k=(.+)$/);
+assert.equal(k, pub);
+const [h, c, sig] = jwt.split('.');
+const claims = JSON.parse(Buffer.from(c, 'base64url'));
+assert.equal(claims.aud, 'https://fcm.googleapis.com');
+const raw = Buffer.from(pub, 'base64url');
+assert.equal(raw.length, 65);
+const key = nodeCrypto.createPublicKey({key: {kty: 'EC', crv: 'P-256', x: raw.subarray(1, 33).toString('base64url'), y: raw.subarray(33).toString('base64url')}, format: 'jwk'});
+assert.ok(nodeCrypto.verify('sha256', Buffer.from(h + '.' + c), {key, dsaEncoding: 'ieee-p1363'}, Buffer.from(sig, 'base64url')), 'ES256 signature verifies with Node crypto');
+for (let i = 0; i < 5; i++) { // several signatures, different messages
+  const j = context.qbsVapidJwt_('https://web.push.apple.com', BigInt('0x' + props.get('QB_VAPID_D'))).split('.');
+  assert.ok(nodeCrypto.verify('sha256', Buffer.from(j[0] + '.' + j[1]), {key, dsaEncoding: 'ieee-p1363'}, Buffer.from(j[2], 'base64url')));
+}
+mail.length = 0; pushes.length = 0;
+addTicket({id: 'jjjj-1010-weaver', date: '2026-11-11', customer: 'Weaver Group Ltd', truck: '822', hours: 3, rate: 375});
+context.qbsNightlySync();
+assert.equal(pushes.length, 1, 'Phone pinged after invoices update');
+assert.equal(mail.length, 0, 'No email when the phone ping worked');
+pushStatus = 410; pushes.length = 0;
+addTicket({id: 'kkkk-1111-weaver', date: '2026-11-12', customer: 'Weaver Group Ltd', truck: '822', hours: 3, rate: 375});
+context.qbsNightlySync();
+assert.equal(JSON.parse(props.get('QB_PUSH_SUBS')).length, 0, 'Dead phone subscription removed');
+assert.equal(mail.length, 1, 'Falls back to email when no phone could be reached');
+
+console.log('PASS: phone alerts (owner code, ES256 verified by Node crypto, ping replaces email, dead subscriptions removed). PASS: nightly summary email (on change / failure only). PASS: rolling invoice per customer, name matching, GST, skips old/test/NO BILL rows, $0 + flag for missing rates, idempotent reruns, sheet rate updates, QuickBooks edits and manual lines preserved, sent invoices frozen, deleted invoices recovered, nothing sent to customers.');
