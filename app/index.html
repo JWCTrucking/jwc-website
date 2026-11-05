@@ -4,9 +4,17 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Welcome | JWC Field App</title>
 <meta name="theme-color" content="#08090b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="JWC Field App">
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="jwc-icon-192.png"><link rel="apple-touch-icon" href="jwc-icon-192.png">
+<script>
+try {
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && sessionStorage.getItem('jwc-intro-played') !== 'yes') {
+    document.documentElement.classList.add('intro-running');
+    setTimeout(() => document.documentElement.classList.remove('intro-running'), 4200);
+  }
+} catch {}
+</script>
 <style>
-*{box-sizing:border-box}html{color-scheme:dark}body{margin:0;background:#08090b;color:#e9eaed;font:16px system-ui,Arial,sans-serif}header{display:flex;justify-content:center;align-items:center;padding:12px 20px;background:#0a0b0e;border-bottom:1px solid #303238}.brand{position:relative;width:220px;overflow:hidden;mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent),linear-gradient(to bottom,transparent,#000 20%,#000 76%,transparent);mask-composite:intersect}.brand img{display:block;height:auto;width:143%;max-width:none;margin-left:-43%;mix-blend-mode:screen}.photo{overflow:hidden;background:#101115}.photo img{display:block;width:100%;height:auto;aspect-ratio:2/1;object-fit:contain;transform-origin:70% 50%}.welcome{max-width:650px;margin:auto;text-align:center;padding:30px 20px 26px}.eyebrow{margin:0 0 10px;color:#a6aeb9;font-size:12px;font-weight:750;letter-spacing:.18em}h1{font-size:clamp(30px,6vw,46px);letter-spacing:.1em;margin:0 0 10px}p{color:#bdc4ce;line-height:1.6}.intro{margin:0 0 26px}.actions{display:grid;gap:14px}.action{display:flex;min-height:68px;align-items:center;justify-content:space-between;gap:14px;padding:20px 22px;border-radius:8px;border:1px solid #b8bbc0;background:linear-gradient(125deg,#858d98,#f3f5f7 45%,#a6adb7);color:#101216;font-size:17px;font-weight:850;text-decoration:none;text-align:left}.action span:last-child{font-size:25px;font-weight:500}.action.secondary{background:linear-gradient(130deg,#252a32,#14171c);color:#f1f3f5;border-color:#707985}.action:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid white;outline-offset:4px}.connection-note{font-size:12px;color:#9ba5b3;margin:20px 0 0}.install{max-width:610px;margin:0 auto;padding:0 20px 22px;font-size:13px;color:#aeb6c3;line-height:1.6}.install summary{min-height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:underline;text-underline-offset:4px}.install p{margin:8px 0 12px}.offline{border:1px solid #697382;background:#171d25;border-radius:8px;padding:12px 14px;margin:20px 20px 0;font-size:14px}.offline[hidden]{display:none}footer{padding:16px 20px calc(18px + env(safe-area-inset-bottom));border-top:1px solid #303238;text-align:center;font-size:12px;color:#8f98a5}footer a{color:#c1c8d2;text-decoration:none}@keyframes drift{from{transform:scale(1)}to{transform:scale(1.015)}}@media(prefers-reduced-motion:reduce){.photo img{animation:none}}@media(min-width:900px){.photo .truck-scene{max-width:1440px;margin:auto}.photo img{height:auto}.welcome{padding-top:28px}.actions{grid-template-columns:1fr 1fr}}
+*{box-sizing:border-box}html{color-scheme:dark}body{margin:0;background:#08090b;color:#e9eaed;font:16px system-ui,Arial,sans-serif}header{display:flex;justify-content:center;align-items:center;padding:12px 20px;background:#0a0b0e;border-bottom:1px solid #303238}.brand{position:relative;width:220px;overflow:hidden;mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent),linear-gradient(to bottom,transparent,#000 20%,#000 76%,transparent);mask-composite:intersect}.brand img{display:block;height:auto;width:143%;max-width:none;margin-left:-43%;mix-blend-mode:screen}.photo{overflow:hidden;background:#101115}.photo img{display:block;width:100%;height:auto;aspect-ratio:2/1;object-fit:contain;transform-origin:70% 50%}.welcome{max-width:650px;margin:auto;text-align:center;padding:30px 20px 26px}.eyebrow{margin:0 0 10px;color:#a6aeb9;font-size:12px;font-weight:750;letter-spacing:.18em}h1{font-size:clamp(30px,6vw,46px);letter-spacing:.1em;margin:0 0 10px}p{color:#bdc4ce;line-height:1.6}.intro{margin:0 0 26px}.actions{display:grid;gap:14px;margin-top:26px}.action{display:flex;min-height:68px;align-items:center;justify-content:space-between;gap:14px;padding:20px 22px;border-radius:8px;border:1px solid #b8bbc0;background:linear-gradient(125deg,#858d98,#f3f5f7 45%,#a6adb7);color:#101216;font-size:17px;font-weight:850;text-decoration:none;text-align:left}.action span:last-child{font-size:25px;font-weight:500}.action.secondary{background:linear-gradient(130deg,#252a32,#14171c);color:#f1f3f5;border-color:#707985}.action:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid white;outline-offset:4px}.connection-note{font-size:12px;color:#9ba5b3;margin:20px 0 0}.install{max-width:610px;margin:0 auto;padding:0 20px 22px;font-size:13px;color:#aeb6c3;line-height:1.6}.install summary{min-height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:underline;text-underline-offset:4px}.install p{margin:8px 0 12px}.offline{border:1px solid #697382;background:#171d25;border-radius:8px;padding:12px 14px;margin:20px 20px 0;font-size:14px}.offline[hidden]{display:none}footer{padding:16px 20px calc(18px + env(safe-area-inset-bottom));border-top:1px solid #303238;text-align:center;font-size:12px;color:#8f98a5}footer a{color:#c1c8d2;text-decoration:none}@keyframes drift{from{transform:scale(1)}to{transform:scale(1.015)}}@media(prefers-reduced-motion:reduce){.photo img{animation:none}}@media(min-width:900px){.photo .truck-scene{max-width:1440px;margin:auto}.photo img{height:auto}.welcome{padding-top:28px}.actions{grid-template-columns:1fr 1fr}}
 .truck-scene{position:relative;animation:truck-drift 24s ease-in-out infinite alternate;transform-origin:70% 50%}
 @keyframes truck-drift{from{transform:scale(1)}to{transform:scale(1.015)}}
 .brand::before{content:"";position:absolute;inset:18% 0 20%;z-index:1;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.45) 49%,transparent 63%);transform:translateX(-140%);mix-blend-mode:screen;animation:chrome-shine 4s ease-in-out infinite}
@@ -33,15 +41,36 @@
 @keyframes welcome-fade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.welcome{animation:none;opacity:1;transform:none}}
 
+.app-shell{opacity:1}
+.opening{display:none;position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at center,#282e37 0%,#090b0e 55%,#030405 100%);align-items:center;justify-content:center;overflow:hidden}
+.intro-running .opening{display:flex;animation:opening-out .85s ease-in 1.85s both}
+.opening::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,#aab3c2,#fff,#858f9e);opacity:0;animation:opening-flash .7s ease-out both}
+.opening-letters{display:flex;gap:clamp(20px,7vw,90px);padding:24px;position:relative;font-size:clamp(72px,17vw,180px);font-style:italic;font-weight:950;line-height:1}
+.opening-letters span{display:block;color:#dfe4ed;background:linear-gradient(145deg,#606a79 0%,#f9fbff 27%,#a2adbb 44%,#fff 52%,#778290 70%,#e6ebf2 86%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 1px #000);opacity:0;animation:letter-arrival .55s cubic-bezier(.15,.7,.25,1) both}
+.opening-letters span:nth-child(1){animation-delay:.3s}.opening-letters span:nth-child(2){animation-delay:.65s}.opening-letters span:nth-child(3){animation-delay:1s}
+.skip-opening{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));right:24px;border:1px solid #6f7885;background:#11151bc9;color:#dfe5ef;border-radius:6px;padding:12px 18px;font:600 13px system-ui;cursor:pointer;z-index:2}
+.skip-opening:focus-visible{outline:2px solid white;outline-offset:4px}
+.intro-running .app-shell{animation:scene-arrival 1s ease-out 1.75s both}
+.intro-running .truck-scene{animation:truck-arrival 1.5s ease-out 1.7s both,truck-drift 24s ease-in-out 3.2s infinite alternate}
+.intro-running .welcome{animation-delay:2.05s}
+@keyframes opening-flash{0%{opacity:0}16%{opacity:.24}100%{opacity:0}}
+@keyframes letter-arrival{from{opacity:0;transform:translateX(-25px) scale(.86)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes opening-out{0%{opacity:1}100%{opacity:0;visibility:hidden}}
+@keyframes scene-arrival{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes truck-arrival{from{transform:translateX(-2%) scale(1.05)}to{transform:none}}
+@media(prefers-reduced-motion:reduce){.opening,.intro-running .opening{display:none!important}.intro-running .app-shell,.intro-running .truck-scene,.intro-running .welcome{animation:none;opacity:1;transform:none}}
+
 </style>
 </head>
 <body>
+<div class="opening" id="opening" aria-label="Welcome to JWC" role="status" aria-hidden="true"><div class="opening-letters" aria-hidden="true"><span>J</span><span>W</span><span>C</span></div><button type="button" class="skip-opening" id="skip-opening">Skip intro</button></div>
+<div class="app-shell" id="app-shell">
 <header><div class="brand"><img src="../assets/jwc-logo.png" width="2048" height="663" alt="JWC Contracting Ltd."></div></header>
 <main>
 <div class="photo"><div class="truck-scene"><img src="../assets/jwc-hero.png" width="1774" height="887" alt="JWC Kenworth hauling an excavator at sunset" fetchpriority="high"><span class="exhaust-shine exhaust-near" aria-hidden="true"></span><span class="exhaust-shine exhaust-far" aria-hidden="true"></span><span class="bumper-shine" aria-hidden="true"></span><span class="roof-beacon beacon-left" aria-hidden="true"></span><span class="roof-beacon beacon-right" aria-hidden="true"></span></div></div>
 <p class="offline" id="offline-message" role="status" hidden>You’re offline. Connect to cell service or Wi-Fi to open a form and submit.</p>
 <section class="welcome" aria-labelledby="welcome-title">
-<p class="eyebrow">JWC FIELD APP</p><h1 id="welcome-title">WELCOME TO JWC</h1><p class="intro">What would you like to do?</p>
+<h1 id="welcome-title">WELCOME TO JWC</h1>
 <div class="actions">
 <a class="action" href="https://script.google.com/macros/s/AKfycbxow0m-w5V3EntTTTdUQ6K2gQnUlPUaMWI_8qb3CrqeOZL5PcTqMjMsvWgmULSg-qDQqg/exec?view=tickets"><span>Field Tickets</span><span aria-hidden="true">→</span></a>
 <a class="action secondary" href="https://script.google.com/macros/s/AKfycbxow0m-w5V3EntTTTdUQ6K2gQnUlPUaMWI_8qb3CrqeOZL5PcTqMjMsvWgmULSg-qDQqg/exec?view=maintenance"><span>Maintenance</span><span aria-hidden="true">→</span></a>
@@ -50,7 +79,25 @@
 <details class="install"><summary>Save this app to your home screen</summary><p><strong>iPhone:</strong> Open this page in Safari. Tap Share, then Add to Home Screen, then Add.</p><p><strong>Android:</strong> Open this page in Chrome. Tap the three dots, then Add to Home screen or Install app.</p><p>Name it <strong>JWC Field App</strong>.</p></details>
 </main>
 <footer>JWC Contracting Ltd. · <a href="../">Company website</a></footer>
+</div>
 <script>
+const opening=document.getElementById('opening');
+const shell=document.getElementById('app-shell');
+let openingTimer;
+function finishOpening(){
+  const hadFocus=opening.contains(document.activeElement);
+  document.documentElement.classList.remove('intro-running');
+  opening.setAttribute('aria-hidden','true');shell.inert=false;
+  clearTimeout(openingTimer);
+  try{sessionStorage.setItem('jwc-intro-played','yes');}catch{}
+  if(hadFocus)document.querySelector('.action').focus({preventScroll:true});
+}
+if(document.documentElement.classList.contains('intro-running')){
+  opening.setAttribute('aria-hidden','false');shell.inert=true;
+  openingTimer=setTimeout(finishOpening,2800);
+}
+document.getElementById('skip-opening').addEventListener('click',finishOpening);
+matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',event=>{if(event.matches)finishOpening();});
 const offlineMessage=document.getElementById('offline-message');
 function updateConnection(){offlineMessage.hidden=navigator.onLine;}
 window.addEventListener('online',updateConnection);window.addEventListener('offline',updateConnection);updateConnection();
