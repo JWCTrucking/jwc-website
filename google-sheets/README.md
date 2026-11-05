@@ -43,3 +43,9 @@ The website navigation and /tickets/ route open the supplied Google deployment. 
 For this existing Apps Script project, replace only the original Code.gs with JWC-App-Update.gs, save, then use Deploy → Manage deployments → edit the existing web app → New version → Deploy. Leave the separate design/simplification file alone. The form-only update does not rerun workbook setup, change spreadsheet contents, or change the deployment URL. Existing script properties remain in the project. Do not add the update as a second file alongside the original Code.gs, because it replaces the original runtime functions.
 
 Browser checks used a simulated Google bridge and mocked launch destination. Live Google authorization and a real submission into the workbook still require verification after updating the deployed version. The repository cannot update Google Apps Script deployments automatically.
+
+## JWC-only forms and broken logo correction
+
+The compact official logo is embedded directly in the generated Google-hosted HTML so it does not depend on the company's public image URL loading inside Google. This correction requires deploying the regenerated app update.
+
+To keep Google branding out of the employee screen, a first-party form is prepared at `/app/forms.html`. Its `doPost` receiver lives in WebSubmission.gs and is also included in JWC-App-Update.gs. The existing working Google form links remain active until the new receiver is deployed, set to execute as the owner with access Anyone, and tested with real submissions. After that, update the two welcome-screen links to the first-party form. No OAuth browser client ID is needed for this approach.
