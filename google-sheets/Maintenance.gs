@@ -29,7 +29,8 @@ function validateMaintenance_(entry) {
   for (const field of ['truck','service','work','performedBy']) if (typeof entry[field]!=='string' || !entry[field].trim() || entry[field].length>5000) throw new Error('Truck, service, work done and performed by are required.');
   if (entry.odometer!=='' && entry.odometer!=null && (!Number.isFinite(Number(entry.odometer)) || Number(entry.odometer)<0 || !Number.isInteger(Number(entry.odometer)))) throw new Error('Odometer must be a whole positive number or blank.');
 }
-function saveMaintenance(entry) {
+function saveMaintenance(entry,staffSession) {
+  requireStaffSession_(staffSession);
   validateMaintenance_(entry);
   const lock=LockService.getScriptLock(); lock.waitLock(30000);
   try {

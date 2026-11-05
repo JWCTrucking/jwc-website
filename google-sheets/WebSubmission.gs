@@ -11,13 +11,16 @@ function doPost(e) {
     if(!/^[A-Za-z0-9_-]{1,100}$/.test(String(packet.requestId||'')))throw new Error('Invalid request.');
     result.requestId=packet.requestId;
     result.id=packet.payload && packet.payload.id;
-    if(packet.kind==='ticket'){saveTickets([packet.payload]);result.ticketRatesPermits=true;}
-    else if(packet.kind==='maintenance')saveMaintenance(packet.payload);
+    if(packet.kind==='auth'){result.session=authenticateStaff_(packet.payload);result.staffPinAccess=true;}
+    else if(packet.kind==='session'){requireStaffSession_(packet.sessionToken);result.staffPinAccess=true;}
+    else if(packet.kind==='ticket'){saveTickets([packet.payload],packet.sessionToken);result.ticketRatesPermits=true;result.staffPinAccess=true;}
+    else if(packet.kind==='maintenance'){saveMaintenance(packet.payload,packet.sessionToken);result.staffPinAccess=true;}
     else if(packet.kind==='push')qbsSavePushSubscription_(packet.payload);
     else throw new Error('Invalid submission type.');
     result.ok=true;
   } catch(error) {
-    result.message='Google Sheets could not save this submission. It is still stored on your device; please retry.';
+    result.code=error.code||'SUBMISSION_FAILED';
+    result.message=error.code?error.message:'Google Sheets could not save this submission. It is still stored on your device; please retry.';
   }
   const json=JSON.stringify(result).replace(/</g,'\\u003c');
   const target=JSON.stringify(origin);

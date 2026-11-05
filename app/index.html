@@ -99,6 +99,7 @@ try {
 <footer>JWC Contracting Ltd. · <a href="../">Company website</a></footer>
 </div>
 <section class="form-screen" id="form-screen" aria-label="JWC form" hidden><iframe id="form-frame" title="JWC form screen"></iframe></section>
+<script src="access-config.js"></script><script src="staff-access.js"></script>
 <script>
 const opening=document.getElementById('opening');
 const shell=document.getElementById('app-shell');
@@ -160,8 +161,10 @@ window.addEventListener('message',event=>{if(event.origin===location.origin&&eve
 window.addEventListener('popstate',()=>{if(!formScreen.hidden)closeForm();});
 document.querySelectorAll('.action').forEach(link=>link.addEventListener('click',event=>{
   if(!navigator.onLine){event.preventDefault();offlineMessage.hidden=false;offlineMessage.scrollIntoView({block:'center',behavior:'smooth'});return;}
-  if(ownedFormsReady){event.preventDefault();openForm(new URL(link.href).searchParams.get('view')==='maintenance'?'maintenance':'tickets',link);}
+  if(ownedFormsReady){event.preventDefault();JWCStaffAccess.require().then(()=>openForm(new URL(link.href).searchParams.get('view')==='maintenance'?'maintenance':'tickets',link)).catch(()=>{});}
 }));
+const requestedForm=new URLSearchParams(location.search).get('open');
+if(requestedForm==='tickets'||requestedForm==='maintenance'){const waitForIntro=setInterval(()=>{if(!document.documentElement.classList.contains('intro-running')){clearInterval(waitForIntro);JWCStaffAccess.require().then(()=>openForm(requestedForm)).catch(()=>{});}},100);}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body></html>

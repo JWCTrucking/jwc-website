@@ -51,7 +51,8 @@ function repairTruckTotals_(sheet) {
   }
   props.setProperty('TRUCK_TOTALS_VERSION','2');
 }
-function saveTickets(tickets) {
+function saveTickets(tickets,staffSession) {
+  requireStaffSession_(staffSession);
   if (!Array.isArray(tickets) || !tickets.length || tickets.length>200) throw new Error('Send between 1 and 200 tickets.');
   tickets.forEach(validateTicket);
   const id=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
@@ -80,6 +81,47 @@ function saveTickets(tickets) {
     }
     SpreadsheetApp.flush(); return {saved:tickets.length,ticketRatesPermits:true};
   } finally {lock.releaseLock();}
+}
+
+/** Shared staff PIN: configure JWC_STAFF_PIN privately in Script Properties. Never put it in the repo. */
+function staffError_(code,message) { const error=new Error(message);error.code=code;return error; }
+function staffPin_() {
+  const pin=PropertiesService.getScriptProperties().getProperty('JWC_STAFF_PIN')||'';
+  if(!/^\d{4}$/.test(pin))throw staffError_('PIN_NOT_CONFIGURED','Staff access is not configured. Contact dispatch.');
+  return pin;
+}
+function staffFingerprint_(pin) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,pin,Utilities.Charset.UTF_8).map(b=>((b+256)%256).toString(16).padStart(2,'0')).join('');
+}
+function requireStaffSession_(token) {
+  const pin=staffPin_();
+  if(typeof token!=='string'||!/^[a-f0-9]{64}$/i.test(token))throw staffError_('PIN_REQUIRED','Enter the staff PIN to continue.');
+  let session;
+  try{session=JSON.parse(CacheService.getScriptCache().get('jwc-session:'+token)||'null');}catch{}
+  if(!session||session.expiresAt<=Date.now()||session.fingerprint!==staffFingerprint_(pin))throw staffError_('PIN_REQUIRED','Your staff access expired. Enter the PIN again.');
+  return true;
+}
+function authenticateStaff_(payload) {
+  const pin=staffPin_();
+  if(!payload||!/^[a-z0-9-]{16,100}$/i.test(String(payload.deviceId||'')))throw staffError_('PIN_REQUIRED','Please reload the app and enter the staff PIN.');
+  const lock=LockService.getScriptLock();lock.waitLock(10000);
+  try{
+    const cache=CacheService.getScriptCache();
+    const deviceKey='jwc-pin-device:'+payload.deviceId;
+    const deviceFailures=Number(cache.get(deviceKey)||0),totalFailures=Number(cache.get('jwc-pin-failures')||0);
+    if(deviceFailures>=5||totalFailures>=30)throw staffError_('PIN_LOCKED','Too many incorrect attempts. Wait five minutes, then try again.');
+    const entered=String(payload.pin||'');let mismatch=entered.length^pin.length;
+    for(let i=0;i<4;i++)mismatch|=(entered.charCodeAt(i)||0)^pin.charCodeAt(i);
+    if(mismatch!==0||!/^\d{4}$/.test(entered)){
+      cache.put(deviceKey,String(deviceFailures+1),300);cache.put('jwc-pin-failures',String(totalFailures+1),300);
+      throw staffError_('PIN_INCORRECT','Incorrect PIN. Please try again.');
+    }
+    cache.remove(deviceKey);
+    const token=(Utilities.getUuid()+Utilities.getUuid()).replace(/-/g,'');
+    const session={expiresAt:Date.now()+21600000,fingerprint:staffFingerprint_(pin)};
+    cache.put('jwc-session:'+token,JSON.stringify(session),21600);
+    return {token,expiresAt:session.expiresAt};
+  }finally{lock.releaseLock();}
 }
 
 /** Maintenance submissions use the same signed-in user's workbook permissions as tickets. */
@@ -113,7 +155,8 @@ function validateMaintenance_(entry) {
   for (const field of ['truck','service','work','performedBy']) if (typeof entry[field]!=='string' || !entry[field].trim() || entry[field].length>5000) throw new Error('Truck, service, work done and performed by are required.');
   if (entry.odometer!=='' && entry.odometer!=null && (!Number.isFinite(Number(entry.odometer)) || Number(entry.odometer)<0 || !Number.isInteger(Number(entry.odometer)))) throw new Error('Odometer must be a whole positive number or blank.');
 }
-function saveMaintenance(entry) {
+function saveMaintenance(entry,staffSession) {
+  requireStaffSession_(staffSession);
   validateMaintenance_(entry);
   const lock=LockService.getScriptLock(); lock.waitLock(30000);
   try {
@@ -142,13 +185,16 @@ function doPost(e) {
     if(!/^[A-Za-z0-9_-]{1,100}$/.test(String(packet.requestId||'')))throw new Error('Invalid request.');
     result.requestId=packet.requestId;
     result.id=packet.payload && packet.payload.id;
-    if(packet.kind==='ticket'){saveTickets([packet.payload]);result.ticketRatesPermits=true;}
-    else if(packet.kind==='maintenance')saveMaintenance(packet.payload);
+    if(packet.kind==='auth'){result.session=authenticateStaff_(packet.payload);result.staffPinAccess=true;}
+    else if(packet.kind==='session'){requireStaffSession_(packet.sessionToken);result.staffPinAccess=true;}
+    else if(packet.kind==='ticket'){saveTickets([packet.payload],packet.sessionToken);result.ticketRatesPermits=true;result.staffPinAccess=true;}
+    else if(packet.kind==='maintenance'){saveMaintenance(packet.payload,packet.sessionToken);result.staffPinAccess=true;}
     else if(packet.kind==='push')qbsSavePushSubscription_(packet.payload);
     else throw new Error('Invalid submission type.');
     result.ok=true;
   } catch(error) {
-    result.message='Google Sheets could not save this submission. It is still stored on your device; please retry.';
+    result.code=error.code||'SUBMISSION_FAILED';
+    result.message=error.code?error.message:'Google Sheets could not save this submission. It is still stored on your device; please retry.';
   }
   const json=JSON.stringify(result).replace(/</g,'\\u003c');
   const target=JSON.stringify(origin);

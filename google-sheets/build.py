@@ -34,6 +34,7 @@ print(output)
 # Single-file installer: one paste into Apps Script, with the current mobile form embedded.
 import json
 code = (root / 'google-sheets' / 'Code.gs').read_text()
+code += '\n' + (root / 'google-sheets' / 'StaffAccess.gs').read_text()
 code += '\n' + (root / 'google-sheets' / 'Maintenance.gs').read_text()
 code += '\n' + (root / 'google-sheets' / 'WebSubmission.gs').read_text()
 code += '\n' + (root / 'google-sheets' / 'Design.gs').read_text()
@@ -45,6 +46,7 @@ print(bundle)
 # Form-only update for an existing project: no setup/design functions to rerun or duplicate.
 runtime = (root / 'google-sheets' / 'Code.gs').read_text()
 runtime = runtime[runtime.index('function doGet('):]
+runtime += '\n' + (root / 'google-sheets' / 'StaffAccess.gs').read_text()
 runtime += '\n' + (root / 'google-sheets' / 'Maintenance.gs').read_text()
 runtime += '\n' + (root / 'google-sheets' / 'WebSubmission.gs').read_text()
 runtime = runtime.replace("HtmlService.createHtmlOutputFromFile('Tickets')", 'HtmlService.createHtmlOutput(JWC_TICKET_HTML)')

@@ -15,12 +15,12 @@ function sendPacket(kind,data){return new Promise((resolve,reject)=>{
   const messageWindow=window.top;
   const requestId=crypto.randomUUID();const frame=document.createElement('iframe');frame.name='jwc-response-'+requestId;frame.hidden=true;frame.title='Submission confirmation';
   const form=document.createElement('form');form.hidden=true;form.method='POST';form.action=SUBMISSION_URL;form.target=frame.name;
-  const input=document.createElement('input');input.type='hidden';input.name='packet';input.value=JSON.stringify({kind,payload:data,requestId,origin:location.origin});form.append(input);
+  const input=document.createElement('input');input.type='hidden';input.name='packet';input.value=JSON.stringify({kind,payload:data,requestId,origin:location.origin,sessionToken:window.JWCStaffAccess?.getToken()});form.append(input);
   const timer=setTimeout(()=>finish(new Error('No confirmation received. Your entry is saved here. Check your connection, then tap Submit to retry.')),45000);
   function cleanup(){clearTimeout(timer);messageWindow.removeEventListener('message',message);form.remove();frame.remove();cleanupRequests.delete(cleanup);}
   cleanupRequests.add(cleanup);
   function finish(error){cleanup();if(error)reject(error);else resolve();}
-  function message(event){let host;try{host=new URL(event.origin).hostname;}catch{return;}if(event.origin!=='https://script.google.com' && !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(event.origin))return;const result=event.data;if(!result||result.type!=='JWC_SUBMISSION_RESULT'||result.requestId!==requestId||result.id!==data.id)return;if(result.ok===true){if(kind==='ticket'&&(data.permits===true||data.hourlyRate!==''&&data.hourlyRate!=null||data.permitRate!==''&&data.permitRate!=null)&&result.ticketRatesPermits!==true){finish(new Error('Ticket details reached Sheets, but rates and permits were not confirmed. The Google app needs its new version deployed. Your entry is kept here; tap Submit again after the update.'));return;}finish();}else finish(new Error(result.message||'Not submitted. Your form has been kept. Tap Submit to retry.'));}
+  function message(event){let host;try{host=new URL(event.origin).hostname;}catch{return;}if(event.origin!=='https://script.google.com' && !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(event.origin))return;const result=event.data;if(!result||result.type!=='JWC_SUBMISSION_RESULT'||result.requestId!==requestId||result.id!==data.id)return;if(result.ok===true){if(kind==='ticket'&&(data.permits===true||data.hourlyRate!==''&&data.hourlyRate!=null||data.permitRate!==''&&data.permitRate!=null)&&result.ticketRatesPermits!==true){finish(new Error('Ticket details reached Sheets, but rates and permits were not confirmed. The Google app needs its new version deployed. Your entry is kept here; tap Submit again after the update.'));return;}finish();}else finish(Object.assign(new Error(result.message||'Not submitted. Your form has been kept. Tap Submit to retry.'),{code:result.code}));}
   messageWindow.addEventListener('message',message);document.body.append(frame,form);form.submit();
 });}
 function controls(kind){return kind==='ticket'?{form:$('form'),status:$('status'),date:$('date')}:{form:$('maintenance-form'),status:$('maintenance-status'),date:$('service-date')};}
@@ -33,7 +33,7 @@ async function submit(kind){
   if(!navigator.onLine){view.status.textContent='No service. Your form is saved here. Tap Submit when service returns.';return;}
   button.disabled=true;button.textContent='Submitting…';view.form.querySelectorAll('fieldset').forEach(e=>e.disabled=true);view.status.textContent='Sending… Please keep this screen open.';
   try{await sendPacket(kind,data);try{localStorage.removeItem('jwc-form-'+kind+'-draft');}catch{}pending[kind]=null;view.form.reset();if(kind==='ticket')syncPermitField();view.date.value=today();window.scrollTo(0,0);view.status.textContent=kind==='maintenance'?'Maintenance submitted to Google Sheets.':'Ticket submitted to Google Sheets.';}
-  catch(error){view.status.textContent=error.message;}
+  catch(error){view.status.textContent=error.message;if(error.code==='PIN_REQUIRED'){JWCStaffAccess.forget();JWCStaffAccess.require().then(()=>{view.status.textContent='Unlocked. Tap Submit to send your saved entry.';}).catch(()=>{});}}
   finally{button.disabled=false;button.textContent='Submit';view.form.querySelectorAll('fieldset').forEach(e=>e.disabled=false);}
 }
 $('form').onsubmit=e=>{e.preventDefault();void submit('ticket');};$('maintenance-form').onsubmit=e=>{e.preventDefault();void submit('maintenance');};
@@ -45,3 +45,8 @@ syncPermitField();
 showView(new URLSearchParams(location.search).get('view'));
 
 if(window.parent!==window){document.body.classList.add('is-embedded');document.querySelector('.form-back').addEventListener('click',event=>{event.preventDefault();window.parent.postMessage({type:'JWC_CLOSE_FORM'},location.origin);});}
+
+if(window.JWCStaffAccess?.enabled()){
+ const content=document.querySelector('main');content.inert=true;
+ JWCStaffAccess.require().then(()=>{content.inert=false;}).catch(()=>{if(window.parent!==window)window.parent.postMessage({type:'JWC_CLOSE_FORM'},location.origin);else location.href='./';});
+}

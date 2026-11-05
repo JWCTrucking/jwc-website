@@ -78,7 +78,8 @@ function repairTruckTotals_(sheet) {
   }
   props.setProperty('TRUCK_TOTALS_VERSION','2');
 }
-function saveTickets(tickets) {
+function saveTickets(tickets,staffSession) {
+  requireStaffSession_(staffSession);
   if (!Array.isArray(tickets) || !tickets.length || tickets.length>200) throw new Error('Send between 1 and 200 tickets.');
   tickets.forEach(validateTicket);
   const id=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
