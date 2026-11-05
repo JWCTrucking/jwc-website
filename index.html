@@ -4,7 +4,7 @@
 <style>
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#08090b;color:#e9eaed;font:16px system-ui,Arial,sans-serif}a{color:inherit}
 header{display:flex;justify-content:space-between;align-items:center;padding:12px clamp(16px,4vw,70px);border-bottom:1px solid #3a3c41;background:#0a0b0e;gap:18px}
-header>a{display:block;width:220px;overflow:hidden;flex-shrink:0}header img{width:143%;max-width:none;display:block;margin-left:-43%;mix-blend-mode:screen}nav{display:flex;gap:24px;align-items:center}nav a{text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.08em}nav a:hover{color:white}
+header>a{display:block;width:220px;overflow:hidden;flex-shrink:0}header img{width:143%;max-width:none;display:block;margin-left:-43%;mix-blend-mode:screen}nav{display:flex;gap:24px;align-items:center;justify-content:flex-end;flex-wrap:wrap}nav a{text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.08em}nav a:hover{color:white}
 .hero{position:relative;min-height:78vh;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;text-align:left;padding:60px 20px 40px;background:linear-gradient(90deg,rgba(5,6,8,.82),rgba(5,6,8,.23) 70%),url("assets/jwc-hero.png") center/cover no-repeat,#11161c}
 .hero-photo{display:none}
 h1{font-size:clamp(22px,3.4vw,42px);letter-spacing:.22em;margin:0;font-weight:850}p{color:#c3c5c9;line-height:1.7}
@@ -12,7 +12,7 @@ h1{font-size:clamp(22px,3.4vw,42px);letter-spacing:.22em;margin:0;font-weight:85
 .info{padding:60px 22px;text-align:center;border-top:1px solid #303238;background:#101115}.info h1,.info h2{font-size:24px;letter-spacing:.14em;margin:0 0 12px}.info a{font-weight:700}.intro{max-width:680px;margin:16px auto 0}
 footer{padding:25px 20px;text-align:center;color:#9a9da3;border-top:1px solid #303238;font-size:13px}
 @media(max-width:800px){
-header{padding:12px 16px;gap:12px}header>a{width:clamp(116px,34vw,170px)}header img{width:143%;max-width:none}nav{gap:12px}nav a{font-size:11px;letter-spacing:.04em}
+header{padding:12px 16px;gap:12px}header>a{width:clamp(116px,34vw,170px)}header img{width:143%;max-width:none}nav{gap:10px 12px}nav a{font-size:11px;letter-spacing:.04em}
 .hero{min-height:0;padding:0;background:#0a0b0e;display:block}
 .hero-photo{display:block;width:100%;height:auto;aspect-ratio:2/1;object-fit:contain}
 h1{font-size:clamp(23px,5vw,36px);letter-spacing:.08em;line-height:1.25}
@@ -21,7 +21,7 @@ h1{font-size:clamp(23px,5vw,36px);letter-spacing:.08em;line-height:1.25}
 }
 
 </style></head><body>
-<header><a href="./" aria-label="JWC Contracting Ltd. home"><img src="assets/jwc-logo.png" alt="JWC Contracting Ltd. official chrome logo"></a><nav><a href="tickets/">FIELD TICKETS</a><a href="#contact">CONTACT</a></nav></header>
+<header><a href="./" aria-label="JWC Contracting Ltd. home"><img src="assets/jwc-logo.png" alt="JWC Contracting Ltd. official chrome logo"></a><nav><a href="tickets/">FIELD TICKETS</a><a href="#contact">CONTACT</a><a href="#safety">SAFETY</a></nav></header>
 <main><section class="hero"><img class="hero-photo" src="assets/jwc-hero.png" width="1774" height="887" alt="JWC Kenworth hauling an excavator on a lowbed trailer at sunset" fetchpriority="high"></section>
-<section class="info" id="contact"><h1>BUILT FOR THE HEAVY HAUL</h1><p class="intro">Family owned and operated since 2019, JWC Contracting Ltd. is based in Peace River and operates a fleet of trucks serving heavy equipment and oilfield hauling needs across Northern Alberta. From the yard to the jobsite, our team is ready to coordinate your next move.</p><h2 style="margin-top:40px">DISPATCH &amp; SALES</h2><p>Dispatch Team</p><p><a class="btn" href="tel:+17806256837">CALL NOW!</a></p><p><a href="tel:+17806256837">780-625-6837</a></p><p><a href="mailto:dispatch@jwchauling.com">dispatch@jwchauling.com</a></p><p>Peace River, Alberta</p></section></main>
+<section class="info" id="contact"><h1>BUILT FOR THE HEAVY HAUL</h1><p class="intro">Family owned and operated since 2019, JWC Contracting Ltd. is based in Peace River and operates a fleet of trucks serving heavy equipment and oilfield hauling needs across Northern Alberta. From the yard to the jobsite, our team is ready to coordinate your next move.</p><h2 style="margin-top:40px">DISPATCH &amp; SALES</h2><p>Dispatch Team</p><p><a class="btn" href="tel:+17806256837">CALL NOW!</a></p><p><a href="tel:+17806256837">780-625-6837</a></p><p><a href="mailto:dispatch@jwchauling.com">dispatch@jwchauling.com</a></p><p>Peace River, Alberta</p></section><section class="info" id="safety" aria-labelledby="safety-heading"><h2 id="safety-heading">SAFETY</h2><p class="intro">For safety documentation, site access requirements, or questions about your haul, contact our dispatch team before your scheduled move.</p><p><a href="mailto:dispatch@jwchauling.com?subject=Safety%20inquiry">CONTACT DISPATCH ABOUT SAFETY</a></p></section></main>
 <footer>JWC Contracting Ltd. &nbsp;|&nbsp; <a href="tel:+17806256837">780-625-6837</a></footer></body></html>
