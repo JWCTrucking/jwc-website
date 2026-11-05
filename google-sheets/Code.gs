@@ -65,6 +65,19 @@ function ensurePermitColumns_(sheet) {
     }
   }
 }
+function repairTruckTotals_(sheet) {
+  const props=PropertiesService.getScriptProperties();
+  if(props.getProperty('TRUCK_TOTALS_VERSION')==='2')return;
+  const last=sheet.getLastRow();
+  if(last>1) {
+    sheet.getRange(2,16,last-1,1).getFormulas().forEach((cells,index)=>{
+      const row=index+2;
+      const combined='=IF(OR(N'+row+'="",O'+row+'="",AND(R'+row+'=TRUE,S'+row+'="")),"",ROUND(N'+row+'*O'+row+'+IF(R'+row+'=TRUE,S'+row+',0),2))';
+      if(cells[0]===combined)sheet.getRange(row,16).setFormula('=IF(OR(N'+row+'="",O'+row+'=""),"",ROUND(N'+row+'*O'+row+',2))');
+    });
+  }
+  props.setProperty('TRUCK_TOTALS_VERSION','2');
+}
 function saveTickets(tickets) {
   if (!Array.isArray(tickets) || !tickets.length || tickets.length>200) throw new Error('Send between 1 and 200 tickets.');
   tickets.forEach(validateTicket);
@@ -75,6 +88,7 @@ function saveTickets(tickets) {
   const lock=LockService.getScriptLock(); lock.waitLock(30000);
   try {
     ensurePermitColumns_(sheet);
+    repairTruckTotals_(sheet);
     const count=sheet.getLastRow();
     const ids=count>1?sheet.getRange(2,1,count-1,1).getValues().flat().map(String):[];
     for (const t of tickets) {
@@ -89,7 +103,7 @@ function saveTickets(tickets) {
         if(!t.permits)sheet.getRange(row,19).setValue('');
         else if(t.permitRate!==undefined && t.permitRate!==null && t.permitRate!=='')sheet.getRange(row,19).setValue(Number(t.permitRate));
       } else if(idx<0)sheet.getRange(row,18).setValue(false);
-      sheet.getRange(row,16).setFormula('=IF(OR(N'+row+'="",O'+row+'="",AND(R'+row+'=TRUE,S'+row+'="")),"",ROUND(N'+row+'*O'+row+'+IF(R'+row+'=TRUE,S'+row+',0),2))');
+      sheet.getRange(row,16).setFormula('=IF(OR(N'+row+'="",O'+row+'=""),"",ROUND(N'+row+'*O'+row+',2))');
     }
     SpreadsheetApp.flush(); return {saved:tickets.length,ticketRatesPermits:true};
   } finally {lock.releaseLock();}
