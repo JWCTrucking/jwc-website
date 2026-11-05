@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Invoice alerts · JWC</title>
+<meta name="theme-color" content="#0b0c0f"><link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="apple-touch-icon" href="jwc-icon-192.png">
+<style>
+*{box-sizing:border-box}html{color-scheme:dark}body{margin:0;background:#0b0c0f;color:#eee;font:16px system-ui,Arial,sans-serif}
+header{padding:calc(12px + env(safe-area-inset-top)) 16px 12px;border-bottom:1px solid #30343b;display:flex;align-items:center;gap:14px;background:#101216}
+header a{color:#e5e7eb;text-decoration:none;font-size:28px;line-height:1;padding:4px 10px 4px 0}header strong{font-size:17px}
+main{max-width:520px;margin:0 auto;padding:26px 16px 60px}
+h1{font-size:28px;letter-spacing:-.03em;margin:0 0 10px}p{color:#b8bec7;line-height:1.55;margin:0 0 18px}
+.panel{padding:20px 16px;border:1px solid #343a43;border-radius:12px;background:#13161b}
+label{display:block;font-size:14px;color:#dce1e8;font-weight:650;margin-bottom:8px}
+input{display:block;width:100%;min-height:56px;background:#20252d;color:#fff;border:1px solid #525d6c;border-radius:8px;padding:12px;font:700 24px ui-monospace,monospace;letter-spacing:6px;text-align:center}
+button{display:block;width:100%;margin-top:16px;min-height:54px;border:0;border-radius:8px;font-weight:750;font-size:16px;cursor:pointer;background:linear-gradient(120deg,#9ca3ad,#f1f3f5,#a5adb7);color:#101216}
+button:disabled{opacity:.6}.status{margin:14px 0 0;font-size:14px;line-height:1.5;color:#c3e5c8;min-height:1em}.status.err{color:#f3b4b4}
+.small{font-size:13px;color:#8f99a7;margin-top:20px}
+</style>
+</head>
+<body>
+<header><a href="./" aria-label="Back to app">‹</a><strong>Invoice alerts</strong></header>
+<main>
+<h1>Invoice alerts</h1>
+<p>Get a ping on this phone each night when the day's tickets are added to QuickBooks invoices. Owner only.</p>
+<section class="panel">
+<label for="code">Owner code</label>
+<input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••">
+<button id="go" type="button">Turn on alerts</button>
+<p class="status" id="status" role="status"></p>
+</section>
+<p class="small">The owner code is on the <b>QuickBooks</b> tab of the JWC Master Tickets sheet. On iPhone, open this from the JWC app on your Home Screen.</p>
+</main>
+<script>
+/* Public half of the sheet's alert key (QuickBooks tab → "Alerts public key"). Not a secret. */
+const VAPID_PUBLIC_KEY='BL1WtUrgF8IxuizoOV1HXQtJgY55sR59be9Udf6QnP93CKRmz02XUWruIURKlW6MSYHpDTpgbHqWU19-rjyDjhA';
+const SUBMISSION_URL='https://script.google.com/macros/s/AKfycbxow0m-w5V3EntTTTdUQ6K2gQnUlPUaMWI_8qb3CrqeOZL5PcTqMjMsvWgmULSg-qDQqg/exec';
+const $=id=>document.getElementById(id);
+function say(text,err){$('status').textContent=text;$('status').className='status'+(err?' err':'');}
+function keyBytes(b64){const s=atob((b64+'='.repeat((4-b64.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(s,c=>c.charCodeAt(0));}
+function send(payload){return new Promise((resolve,reject)=>{
+  const requestId=crypto.randomUUID(),frame=document.createElement('iframe'),form=document.createElement('form'),input=document.createElement('input');
+  frame.name='jwc-alerts-'+requestId;frame.hidden=true;form.hidden=true;form.method='POST';form.action=SUBMISSION_URL;form.target=frame.name;
+  input.type='hidden';input.name='packet';input.value=JSON.stringify({kind:'push',payload,requestId,origin:location.origin});form.append(input);
+  const timer=setTimeout(()=>done(new Error('No answer. Check your connection and try again.')),45000);
+  function done(err){clearTimeout(timer);removeEventListener('message',onMsg);form.remove();frame.remove();err?reject(err):resolve();}
+  function onMsg(e){if(e.origin!=='https://script.google.com'&&!/^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(e.origin))return;const r=e.data;if(!r||r.type!=='JWC_SUBMISSION_RESULT'||r.requestId!==requestId)return;r.ok===true?done():done(new Error('Not turned on. Check the owner code and try again.'));}
+  addEventListener('message',onMsg);document.body.append(frame,form);form.submit();
+});}
+$('go').onclick=async()=>{
+  const code=$('code').value.trim();
+  if(!/^\d{6}$/.test(code))return say('Enter the 6-digit owner code.',true);
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window))
+    return say(/iPhone|iPad/.test(navigator.userAgent)?'On iPhone: add the JWC app to your Home Screen, open it from there, then try again.':'This browser can\'t show alerts. Use Chrome or the Home Screen app.',true);
+  $('go').disabled=true;say('Turning on…');
+  try{
+    if(await Notification.requestPermission()!=='granted')throw new Error('Notifications were blocked. Allow them for the JWC app in your phone settings, then try again.');
+    await navigator.serviceWorker.register('./sw.js');
+    const reg=await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(VAPID_PUBLIC_KEY)});
+    await send({id:crypto.randomUUID(),code,subscription:{endpoint:sub.endpoint}});
+    say('Alerts are on for this phone. You should get a test ping now.');
+  }catch(e){say(e.message||'Something went wrong. Try again.',true);}
+  finally{$('go').disabled=false;}
+};
+</script>
+</body>
+</html>
