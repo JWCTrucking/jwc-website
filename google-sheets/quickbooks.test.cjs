@@ -45,20 +45,23 @@ function addTicket(t) {
 const qb = {
   customers: [{Id: '100000011', DisplayName: 'River Valley Energy'}, {Id: '100000001', DisplayName: 'Weaver Group Limted'}],
   items: [{Id: '1', Name: 'Services', Type: 'Service'}, {Id: '2', Name: 'Trucking', Type: 'Category'}, {Id: '3', Name: 'Truck- 820', Type: 'Service'}, {Id: '4', Name: 'Truck- 822', Type: 'Service'}],
-  taxes: [{Id: '3', Name: 'GST'}, {Id: '4', Name: 'Exempt'}],
+  taxes: [{Id: '3', Name: 'GST', SalesTaxRateList: {TaxRateDetail: [{TaxRateRef: {value: '4'}}]}}, {Id: '4', Name: 'Exempt'}],
   invoices: new Map([['2', {Id: '2', SyncToken: '0', DocNumber: '1002', CustomerRef: {value: '100000011'}, Line: [], TotalAmt: 105000, Balance: 105000, EmailStatus: 'NotSet'}]]),
   nextId: 10, posts: 0,
 };
-function finalize(inv) {
-  let sub = 0, n = 1;
+// Mimics QuickBooks: tax is computed on create, but an update keeps the OLD tax unless TxnTaxDetail is sent.
+function finalize(inv, keepTax) {
+  let sub = 0, n = 1, taxable = 0;
   inv.Line = inv.Line.filter(l => l.DetailType !== 'SubTotalLineDetail').map(l => {
     const d = l.SalesItemLineDetail;
     if (d) assert.ok(Math.abs(d.Qty * d.UnitPrice - l.Amount) < 0.005, 'Line amount must equal qty × rate');
     sub += l.Amount;
+    if (d && d.TaxCodeRef && d.TaxCodeRef.value === '3') taxable += l.Amount;
     return {...l, Id: l.Id || String(100 + qb.nextId++), LineNum: n++};
   });
   inv.Line.push({DetailType: 'SubTotalLineDetail', Amount: sub, SubTotalLineDetail: {}});
-  inv.TotalAmt = Math.round(sub * 105) / 100;
+  if (!inv.TxnTaxDetail || !keepTax) inv.TxnTaxDetail = {TotalTax: Math.round(taxable * 5) / 100};
+  inv.TotalAmt = Math.round((sub + inv.TxnTaxDetail.TotalTax) * 100) / 100;
   inv.Balance = inv.TotalAmt;
   return inv;
 }
@@ -72,6 +75,7 @@ function api(url, opts) {
     if (/FROM Customer/.test(sql)) return ok({QueryResponse: {Customer: qb.customers}});
     if (/FROM Item/.test(sql)) return ok({QueryResponse: {Item: qb.items}});
     if (/FROM TaxCode/.test(sql)) return ok({QueryResponse: {TaxCode: qb.taxes}});
+    if (/FROM TaxRate WHERE Id = '4'/.test(sql)) return ok({QueryResponse: {TaxRate: [{Id: '4', Name: 'GST', RateValue: 5}]}});
     if (/FROM Invoice/.test(sql)) return ok({QueryResponse: {Invoice: [...qb.invoices.values()].map(i => ({DocNumber: i.DocNumber}))}});
   }
   if (opts.method === 'get' && path.startsWith('/invoice/')) {
@@ -85,7 +89,7 @@ function api(url, opts) {
     if (body.Id) {
       const cur = qb.invoices.get(body.Id);
       assert.equal(body.SyncToken, cur.SyncToken, 'Stale SyncToken');
-      const inv = finalize({...cur, Line: body.Line, SyncToken: String(Number(cur.SyncToken) + 1)});
+      const inv = finalize({...cur, Line: body.Line, SyncToken: String(Number(cur.SyncToken) + 1), TxnTaxDetail: body.TxnTaxDetail || cur.TxnTaxDetail}, true);
       qb.invoices.set(inv.Id, inv);
       return ok({Invoice: inv});
     }
@@ -166,6 +170,13 @@ assert.equal(qb.posts, posts, 'Rerun is a no-op');
 addTicket({id: 'eeee-5555-weaver', date: '2026-11-06', customer: 'Weaver Group Ltd', truck: '822', hours: 12, rate: 375});
 sync();
 assert.equal(byDoc('1003').Line.length, 3, 'Second ticket added to the same Weaver invoice');
+assert.equal(byDoc('1003').TxnTaxDetail.TotalTax, 412.5, 'GST recalculated on update (3750 + 4500) × 5%');
+assert.equal(byDoc('1003').TotalAmt, 8662.5);
+// Stale tax left by an earlier update gets repaired even with no new tickets.
+qb.invoices.get(byDoc('1003').Id).TxnTaxDetail = {TotalTax: 187.5};
+let before = qb.posts; sync();
+assert.equal(qb.posts, before + 1, 'Stale GST triggers a repair');
+assert.equal(byDoc('1003').TxnTaxDetail.TotalTax, 412.5);
 assert.ok(!byDoc('1005'), 'No extra invoice created');
 
 // 4. Rate entered later in the sheet updates the line.

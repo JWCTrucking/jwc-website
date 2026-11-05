@@ -221,11 +221,13 @@ function qbsSync_() {
         if (qbsNorm_(line.Description) === qbsNorm_(prev.desc)) line.Description = want.desc;
         touched.push([t, want]);
       }
-      if (!touched.length) continue;
+      const taxDetail = qbsTaxDetail_(lines, qb);
+      const taxStale = inv && Math.abs(Number((inv.TxnTaxDetail || {}).TotalTax || 0) - taxDetail.TotalTax) > 0.009;
+      if (!touched.length && !taxStale) continue;
 
       let saved;
       if (inv) {
-        saved = qbsApi_('post', '/invoice', {Id: inv.Id, SyncToken: inv.SyncToken, sparse: true, Line: lines}).Invoice;
+        saved = qbsApi_('post', '/invoice', {Id: inv.Id, SyncToken: inv.SyncToken, sparse: true, Line: lines, TxnTaxDetail: taxDetail}).Invoice;
         updated++;
       } else {
         saved = qbsApi_('post', '/invoice', {
@@ -265,6 +267,14 @@ function qbsLine_(t, qb) {
     DetailType: 'SalesItemLineDetail', Amount: amount, Description: desc,
     SalesItemLineDetail: {ItemRef: {value: String(item.Id)}, Qty: qty, UnitPrice: rate, ServiceDate: t.date, TaxCodeRef: {value: String(qb.gst)}}
   }};
+}
+
+/** GST on every line coded GST, set explicitly because QuickBooks keeps the old tax on updates. */
+function qbsTaxDetail_(lines, qb) {
+  const base = Math.round(lines.filter(l => l.SalesItemLineDetail && l.SalesItemLineDetail.TaxCodeRef && String(l.SalesItemLineDetail.TaxCodeRef.value) === String(qb.gst))
+    .reduce((sum, l) => sum + Number(l.Amount || 0), 0) * 100) / 100;
+  const tax = Math.round(base * qb.gstPct) / 100;
+  return {TotalTax: tax, TaxLine: [{Amount: tax, DetailType: 'TaxLineDetail', TaxLineDetail: {TaxRateRef: {value: qb.gstRateId}, PercentBased: true, TaxPercent: qb.gstPct, NetAmountTaxable: base}}]};
 }
 
 function qbsItemFor_(truck, items) {
@@ -424,10 +434,15 @@ function qbsStatus_(s) {
 function qbsReference_() {
   const customers = qbsQuery_("SELECT Id, DisplayName FROM Customer WHERE Active = true MAXRESULTS 1000").Customer || [];
   const items = qbsQuery_("SELECT Id, Name, Type FROM Item WHERE Active = true MAXRESULTS 1000").Item || [];
-  const gst = (qbsQuery_("SELECT Id, Name FROM TaxCode").TaxCode || []).find(t => t.Name === 'GST');
+  const gst = (qbsQuery_("SELECT * FROM TaxCode").TaxCode || []).find(t => t.Name === 'GST');
   if (!gst) throw new Error('No tax code named "GST" was found in QuickBooks.');
   if (!items.some(i => i.Type === 'Service')) throw new Error('No service items found in QuickBooks.');
-  return {customers, items, gst: gst.Id};
+  // QuickBooks does not recalculate tax when lines are added to an existing invoice, so keep the GST rate to do it ourselves.
+  const rateRef = gst.SalesTaxRateList && gst.SalesTaxRateList.TaxRateDetail && gst.SalesTaxRateList.TaxRateDetail[0] && gst.SalesTaxRateList.TaxRateDetail[0].TaxRateRef;
+  if (!rateRef) throw new Error('The GST tax code in QuickBooks has no sales tax rate.');
+  const rate = (qbsQuery_("SELECT * FROM TaxRate WHERE Id = '" + String(rateRef.value).replace(/\D/g, '') + "'").TaxRate || [])[0];
+  if (!rate || !(Number(rate.RateValue) >= 0)) throw new Error('Could not read the GST rate from QuickBooks.');
+  return {customers, items, gst: gst.Id, gstRateId: String(rateRef.value), gstPct: Number(rate.RateValue)};
 }
 
 function qbsGetInvoice_(id) {
