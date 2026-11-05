@@ -2,7 +2,7 @@
   "id": "/app/",
   "name": "JWC Field App",
   "short_name": "JWC",
-  "description": "Field tickets and truck maintenance, with an offline submission queue.",
+  "description": "Welcome to JWC. Open Field Tickets or Maintenance.",
   "start_url": "/app/",
   "scope": "/app/",
   "display": "standalone",

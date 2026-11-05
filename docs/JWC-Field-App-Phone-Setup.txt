@@ -2,15 +2,15 @@ JWC FIELD APP — PHONE SETUP
 Save this guide and forward it to new employees.
 
 APP LINK
-https://www.jwchauling.com/tickets/
+https://www.jwchauling.com/app/
 
 BEFORE YOU START
-You need cell service or Wi-Fi. Sign in with the Google account approved by JWC. If Google says you need access, contact Jordan.
+You need cell service or Wi-Fi. If the app asks for a Google account, contact Jordan so the employee access setting can be corrected.
 
 IPHONE (SAFARI)
 1. Open Safari — the blue compass app.
 2. Type or paste the APP LINK above into the address bar and open it.
-3. Sign in to Google if asked. Wait until the JWC form opens.
+3. Wait until the JWC welcome screen and truck photo appear.
 4. Tap Share — the square with an arrow pointing up. Depending on your Safari version, it may be inside the menu beside the address bar.
 5. Scroll through the options and tap Add to Home Screen.
 6. Name it JWC Field App, then tap Add.
@@ -19,7 +19,7 @@ IPHONE (SAFARI)
 ANDROID (CHROME)
 1. Open Chrome.
 2. Type or paste the APP LINK above into the address bar and open it.
-3. Sign in to Google if asked. Wait until the JWC form opens.
+3. Wait until the JWC welcome screen and truck photo appear.
 4. Tap the three-dot menu in Chrome.
 5. Tap Add to Home screen. If Chrome shows Install app instead, tap that.
 6. Name it JWC Field App if asked, then tap Add or Install. Confirm if prompted.
@@ -27,7 +27,7 @@ ANDROID (CHROME)
 
 EACH TIME YOU USE IT
 1. Make sure your phone has cell service or Wi-Fi.
-2. Open JWC Field App from your home screen.
+2. Open JWC Field App from your home screen. Tap Field Tickets or Maintenance.
 3. Complete the required fields, then tap Submit.
 4. Wait for confirmation that it was sent to Google Sheets before closing it. If an error appears, keep the form open and contact Jordan.
 
