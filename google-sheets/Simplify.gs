@@ -8,13 +8,14 @@ function simplifyWorkbookView() {
   sheet.showColumns(1,17);
   sheet.hideColumns(1,2);   // Ticket ID and submission timestamp.
   sheet.hideColumns(7);     // Driver remains stored, but not in the billing view.
-  sheet.hideColumns(9,6);  // Equipment, notes, update time and billing quantity.
+  sheet.hideColumns(9,3);  // Equipment only; work description stays visible.
+  sheet.hideColumns(13,2); // Update time and billing quantity.
   sheet.hideColumns(17);    // Future QuickBooks reference.
   sheet.setHiddenGridlines(true);
   sheet.setFrozenRows(1);
   sheet.setFrozenColumns(0);
   sheet.setTabColor('#aeb6c1');
-  const headers = [[3,'Date'],[4,'Customer'],[5,'Job'],[6,'Truck'],[8,'Hours'],[15,'Rate'],[16,'Total']];
+  const headers = [[3,'Date'],[4,'Customer'],[5,'Job'],[6,'Truck'],[8,'Hours'],[12,'Description of work'],[15,'Rate'],[16,'Total']];
   headers.forEach(([column,title])=>sheet.getRange(1,column).setValue(title));
   sheet.getRange('O1').setNote('Enter the agreed hourly rate here. For normal hourly tickets, Total = Hours × Rate.');
   sheet.getRange('P1').setNote('Calculated automatically from billing quantity × rate. Leave this formula alone.');
@@ -28,7 +29,8 @@ function simplifyWorkbookView() {
   sheet.getRange(2,15,rows-1,1).setBackground('#dce1e8').setFontColor('#101216').setNumberFormat('$#,##0.00');
   sheet.getRange(2,16,rows-1,1).setNumberFormat('$#,##0.00').setFontWeight('bold');
   sheet.getRange(2,8,rows-1,1).setNumberFormat('0.00');
-  [[3,120],[4,260],[5,140],[6,100],[8,100],[15,120],[16,140]].forEach(([c,w])=>sheet.setColumnWidth(c,w));
+  [[3,120],[4,260],[5,140],[6,100],[8,100],[12,360],[15,120],[16,140]].forEach(([c,w])=>sheet.setColumnWidth(c,w));
+  sheet.getRange(2,12,rows-1,1).setWrap(true);
   const rules=sheet.getConditionalFormatRules().filter(rule=>{const condition=rule.getBooleanCondition();return !condition || condition.getCriteriaValues()[0] !== '=AND($A2<>"",$O2="")';});
   rules.push(SpreadsheetApp.newConditionalFormatRule().whenFormulaSatisfied('=AND($A2<>"",$O2="")').setBackground('#dce1e8').setFontColor('#101216').setRanges([sheet.getRange(2,15,rows-1,1)]).build());
   sheet.setConditionalFormatRules(rules);
@@ -37,5 +39,5 @@ function simplifyWorkbookView() {
   const blank=book.getSheetByName('Sheet1');
   if(blank && blank.getLastRow()===0)blank.hideSheet();
   SpreadsheetApp.flush();
-  console.log('Simple view ready: Date | Customer | Job | Truck | Hours | Rate | Total');
+  console.log('Simple view ready: Date | Customer | Job | Truck | Hours | Description of work | Rate | Total');
 }
