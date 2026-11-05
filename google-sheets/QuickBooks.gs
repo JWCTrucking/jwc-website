@@ -110,11 +110,12 @@ function qbsNightlySync() {
     throw e;
   }
   const p = PropertiesService.getScriptProperties();
-  const fingerprint = report.problems.join('\n');
+  const fingerprint = report.problems.join('\n').slice(0, 8000);
   const newProblems = fingerprint !== (p.getProperty('QB_LAST_PROBLEMS') || '');
   const pinged = report.invoices.length ? qbsPushAll_() : 0;
   if ((report.invoices.length && !pinged) || (report.problems.length && newProblems)) qbsNotify_(report);
-  p.setProperty('QB_LAST_PROBLEMS', fingerprint);
+  // Never store a blank value: Google's Script Properties page refuses to save while any value is empty.
+  if (fingerprint) p.setProperty('QB_LAST_PROBLEMS', fingerprint); else p.deleteProperty('QB_LAST_PROBLEMS');
   return report.summary;
 }
 

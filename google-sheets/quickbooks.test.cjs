@@ -301,4 +301,6 @@ ticketLog.getRange(rq, 19).setValue(55);
 context.qbsSync_();
 assert.equal(weaverOpen().Line.filter(l => /Ref JWC-mmmm1313we-P$/.test(l.Description || '')).length, 1, 'Permit charge entered later is added');
 
+/* ---- Never leaves a blank Script Property (Google's settings page won't save with one) ---- */
+for (const [k, v] of props) if (v === '') assert.fail('Blank script property: ' + k);
 console.log('PASS: permits as their own line. PASS: phone alerts (owner code, ES256 verified by Node crypto, ping replaces email, dead subscriptions removed). PASS: nightly summary email (on change / failure only). PASS: rolling invoice per customer, name matching, GST, skips old/test/NO BILL rows, $0 + flag for missing rates, idempotent reruns, sheet rate updates, QuickBooks edits and manual lines preserved, sent invoices frozen, deleted invoices recovered, nothing sent to customers.');
