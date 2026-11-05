@@ -1,6 +1,6 @@
 # Shared four-digit staff PIN
 
-The feature is prepared but not activated. `app/access-config.js` remains disabled until the private Google setting and deployment are ready, so existing employee access is not interrupted mid-rollout. The homepage Field Tickets link becomes visible when enabled and opens the PIN gate before the ticket screen.
+The owner reported setting the private Google PIN and deploying the backend. `app/access-config.js` is enabled. The homepage Field Tickets link opens the PIN gate before the ticket screen. Local tests use simulated Google responses; verify a real staff sign-in and submission after deployment.
 
 ## Activate
 

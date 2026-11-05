@@ -1,5 +1,5 @@
-const CACHE = 'jwc-field-app-v17';
-const ASSETS = ['./','./index.html','./forms.html','./forms.js','./access-config.js','./staff-access.js','./alerts.html','./form-ui.css','./manifest.webmanifest','./jwc-icon-192.png','./jwc-icon-512.png','../assets/jwc-logo.png','../assets/jwc-logo-form.png','../assets/jwc-hero.png'];
+const CACHE = 'jwc-field-app-v18';
+const ASSETS = ['./','./index.html','./forms.html','./forms.js','./access-config.js?v=pin1','./staff-access.js','./alerts.html','./form-ui.css','./manifest.webmanifest','./jwc-icon-192.png','./jwc-icon-512.png','../assets/jwc-logo.png','../assets/jwc-logo-form.png','../assets/jwc-hero.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('jwc-field-app-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{

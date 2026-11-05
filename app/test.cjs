@@ -1,3 +1,4 @@
+const {allowTestStaff}=require('./test-access.cjs');
 const {chromium}=require('playwright'),http=require('http'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
 (async()=>{
  const root=path.resolve(__dirname,'..');
@@ -13,7 +14,7 @@ const {chromium}=require('playwright'),http=require('http'),fs=require('fs'),pat
   browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
   for(const width of [320,390,768,1440]){
    const context=await browser.newContext({viewport:{width,height:900}});
-   const p=await context.newPage();await p.goto('http://127.0.0.1:8001/app/');
+   await allowTestStaff(context);const p=await context.newPage();await p.goto('http://127.0.0.1:8001/app/');
    await p.waitForFunction(()=>!document.documentElement.classList.contains('intro-running'));
    await p.locator('.photo img').evaluate(i=>i.decode());
    assert(await p.getByRole('link',{name:'Field Tickets',exact:true}).isVisible());assert.equal(await p.getByText('WELCOME TO JWC',{exact:true}).count(),0);
