@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://jwchauling.com/sitemap.xml
+Sitemap: https://www.jwchauling.com/sitemap.xml
