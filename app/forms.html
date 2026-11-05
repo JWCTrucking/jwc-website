@@ -34,8 +34,7 @@
 <fieldset><legend><span class="section-number">02</span>Truck &amp; driver</legend><div class="grid">
 <div><label for="truck">Truck number</label><select id="truck" required><option value="">Select truck</option><option>820</option><option>822</option><option>823</option><option>824</option></select></div>
 <div><label for="driver">Driver name</label><input id="driver" autocomplete="name" placeholder="Enter driver name" required></div>
-<div class="wide"><label for="hours">Truck hours</label><input id="hours" type="number" min="0" step="0.25" inputmode="decimal" placeholder="e.g. 8.5" required></div>
-<div><label for="hourlyRate">Truck hourly rate ($/hr) <span class="optional">Optional</span></label><input id="hourlyRate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Leave blank to enter in Sheets"></div>
+<div class="wide hours-rate-row"><div><label for="hours">Truck hours</label><input id="hours" type="number" min="0" step="0.25" inputmode="decimal" placeholder="e.g. 8.5" required></div><div><label for="hourlyRate">Hourly rate ($/hr) <span class="optional">Optional</span></label><input id="hourlyRate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 150.00"></div></div>
 </div></fieldset>
 <fieldset><legend><span class="section-number">03</span>Equipment &amp; work</legend><div class="grid">
 <div class="wide"><span class="field-label" id="equipment-label">Equipment used</span><div class="checks" role="group" aria-labelledby="equipment-label"><label><input type="checkbox" id="jeep">Jeep</label><label><input type="checkbox" id="booster">Booster</label><label><input type="checkbox" id="tridem">Tridem</label></div></div>

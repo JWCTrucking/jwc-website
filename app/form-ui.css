@@ -18,3 +18,5 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px soli
 @media print{.form-appbar,.app-tabs{display:none!important}.heading{display:block}.grid{border:0;background:white}.grid>div{padding:8px;border-color:#aaa}input,select,textarea,label,.field-label{color:black}.panel{padding:0}}
 
 body.is-embedded .form-appbar{padding-top:10px}body.is-embedded .savebar{padding-bottom:12px}
+
+.grid>.hours-rate-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.hours-rate-row>div{min-width:0}.hours-rate-row label{min-height:36px}.hours-rate-row input{width:100%;min-width:0}
