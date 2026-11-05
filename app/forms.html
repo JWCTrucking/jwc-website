@@ -41,6 +41,11 @@
 <div class="wide"><label for="work">Description of work <span class="optional">Optional</span></label><textarea id="work" placeholder="Describe the haul, locations, and any job notes"></textarea></div>
 </div></fieldset>
 
+<fieldset><legend>Rates &amp; permits <span class="optional">Optional</span></legend><div class="grid">
+<div><label for="hourlyRate">Hourly rate ($/hr) <span class="optional">Optional</span></label><input id="hourlyRate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Leave blank to enter in Sheets"></div>
+<div><div class="checks"><label><input type="checkbox" id="permits">Permits</label></div></div>
+<div id="permit-rate-field" hidden><label for="permitRate">Permit rate ($) <span class="optional">Optional</span></label><input id="permitRate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Permit amount for this ticket" disabled></div>
+</div></fieldset>
 <div class="savebar"><div class="savebar-inner"><p class="status" id="status" role="status" aria-live="polite"></p><button type="submit">Submit</button></div></div>
 </form>
 </section>

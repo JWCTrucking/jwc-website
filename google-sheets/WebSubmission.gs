@@ -11,7 +11,7 @@ function doPost(e) {
     if(!/^[A-Za-z0-9_-]{1,100}$/.test(String(packet.requestId||'')))throw new Error('Invalid request.');
     result.requestId=packet.requestId;
     result.id=packet.payload && packet.payload.id;
-    if(packet.kind==='ticket')saveTickets([packet.payload]);
+    if(packet.kind==='ticket'){saveTickets([packet.payload]);result.ticketRatesPermits=true;}
     else if(packet.kind==='maintenance')saveMaintenance(packet.payload);
     else throw new Error('Invalid submission type.');
     result.ok=true;

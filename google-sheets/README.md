@@ -16,7 +16,7 @@ The connected app stores tickets locally first and confirms “Saved to Google S
 ## Workbook tabs and billing
 
 - **Overview:** JWC logo, ticket count, total truck hours, unpriced tickets, and links to the main logs.
-- **Ticket Log:** the source data. Billable quantity follows hours by default; agreed rates are entered manually in the yellow rate cells. Amount is quantity × rate. Rate and quantity overrides survive ticket updates. Column Q is an optional QuickBooks reference.
+- **Ticket Log:** the source data. Billable quantity follows hours by default; the app’s optional hourly rate fills the existing Rate column (O); blank app rates preserve existing Sheet rates. Amount is quantity × hourly rate, plus a permit rate when Permits is checked. Rate and quantity overrides survive ticket updates. Column Q is an optional QuickBooks reference.
 - **Truck Log:** styled live activity, sorted by truck and date, with total tickets and hours.
 - **Billing Data:** customer, ticket, date, truck, hours, quantity, rate, amount, job description and optional QuickBooks reference. This is preparation data, not an invoice or a confirmed QuickBooks import format. No accounting connection has been deployed.
 
@@ -49,3 +49,9 @@ Browser checks used a simulated Google bridge and mocked launch destination. Liv
 The compact official logo is embedded directly in the generated Google-hosted HTML so it does not depend on the company's public image URL loading inside Google. This correction requires deploying the regenerated app update.
 
 To keep Google branding out of the employee screen, a first-party form is prepared at `/app/forms.html`. Its `doPost` receiver lives in WebSubmission.gs and is also included in JWC-App-Update.gs. The owner reported deploying the new receiver, and ownedFormsReady is now enabled so the two buttons open embedded first-party app screens. Execute as the owner with access Anyone; verify live submissions reach the workbook. No OAuth browser client ID is needed for this approach.
+
+## Optional hourly and permit rates
+
+The ticket form now has Hourly rate, Permits, and a separate Permit rate. Hourly rate writes to the existing Rate column O. Columns R (Permits) and S (Permit rate) are appended; Q remains the QuickBooks reference. Permit rate is one charge for that ticket, not multiplied by truck hours. Blank optional rates preserve existing manually entered rates. Explicit zero is accepted. Unchecking Permits clears its charge. New/updated row totals remain blank when the hourly rate is missing, or when Permits is checked but its rate is missing. Existing rows are not bulk-rewritten. The existing table filter is expanded through S while preserving its criteria so permit values sort with the rest of each row.
+
+Deploy the regenerated JWC-App-Update.gs in the existing Google project to accept the new fields. Its response confirms ticketRatesPermits support. The app retains the draft and reports an incomplete rate/permit confirmation if an older backend ignores these options; it does not silently clear that data. No workbook setup/reset is needed; headers appear automatically on the next accepted submission.
