@@ -5,7 +5,7 @@
  * (Extensions → Apps Script). Every name here starts with "qbs" so it cannot clash with the
  * public form receiver. See google-sheets/QUICKBOOKS.md for setup.
  *
- * What it does, every night around 10 PM (Alberta time):
+ * What it does, live every evening from 5 PM to midnight (Alberta time), checking every minute:
  *  - One open (unsent) invoice per customer. New tickets are added to it as lines.
  *  - Rate/hour changes in the sheet update that ticket's line, unless the line was edited in QuickBooks.
  *  - Lines Jordan adds or edits in QuickBooks are kept as he left them.
@@ -31,7 +31,7 @@ function qbsSetup() {
   qbsTabs_(book);
   const handlers = ScriptApp.getProjectTriggers().map(t => t.getHandlerFunction());
   if (!handlers.includes('qbsOnOpen')) ScriptApp.newTrigger('qbsOnOpen').forSpreadsheet(book).onOpen().create();
-  if (!handlers.includes('qbsNightlySync')) ScriptApp.newTrigger('qbsNightlySync').timeBased().atHour(22).nearMinute(0).everyDays(1).inTimezone(QBS_TZ).create();
+  qbsUseLiveWindow_();
   qbsStatus_({status: 'Setup done. Next: reload the sheet, then QuickBooks menu → Connect QuickBooks.'});
   console.log('Intuit redirect URL: ' + qbsRedirectUri_());
   return qbsRedirectUri_();
@@ -82,7 +82,7 @@ function qbsAuthCallback(request) {
   let name = '';
   try { name = qbsApi_('get', '/companyinfo/' + q.realmId).CompanyInfo.CompanyName; } catch (e) {}
   p.setProperty('QB_COMPANY', name);
-  qbsStatus_({status: 'Connected to ' + (name || 'QuickBooks') + '. Invoices update nightly around 10 PM.', company: name});
+  qbsStatus_({status: 'Connected to ' + (name || 'QuickBooks') + '. Invoices update live from 5 PM to midnight.', company: name});
   return HtmlService.createHtmlOutput('<p style="font:16px Arial">Connected to <b>' + qbsEsc_(name) + '</b>. You can close this tab.</p>');
 }
 
@@ -104,7 +104,9 @@ function qbsNightlySync() {
   try { report = qbsSync_(); }
   catch (e) {
     qbsStatus_({status: 'Last sync FAILED: ' + e.message});
-    qbsNotify_({failed: e.message});
+    const day = Utilities.formatDate(new Date(), QBS_TZ, 'yyyy-MM-dd');
+    const props = PropertiesService.getScriptProperties();
+    if (props.getProperty('QB_LAST_FAIL_EMAIL') !== day) { qbsNotify_({failed: e.message}); props.setProperty('QB_LAST_FAIL_EMAIL', day); }
     throw e;
   }
   const p = PropertiesService.getScriptProperties();
@@ -125,7 +127,7 @@ function qbsNotify_(report) {
   let subject, html;
   if (report.failed) {
     subject = 'JWC invoices: nightly QuickBooks update FAILED';
-    html = '<div style="' + style + '"><p><b>Tonight\'s QuickBooks update did not run.</b></p><p>' + qbsEsc_(report.failed) + '</p>' +
+    html = '<div style="' + style + '"><p><b>Tonight\'s QuickBooks update failed.</b></p><p>' + qbsEsc_(report.failed) + '</p>' +
       '<p>If it says the sign-in expired: open the sheet → <b>QuickBooks</b> menu → <b>Connect QuickBooks</b>.</p>' +
       '<p><a href="' + sheetUrl + '">Open JWC Master Tickets</a></p></div>';
   } else {
@@ -666,27 +668,51 @@ function qbsBigToBytes_(x, len) { const out = new Array(len); for (let i = len -
 function qbsSigned_(arr) { return arr.map(v => (v & 255) > 127 ? (v & 255) - 256 : (v & 255)); }
 function qbsB64u_(bytes) { return Utilities.base64EncodeWebSafe(qbsSigned_(Array.from(bytes))).replace(/=+$/, ''); }
 
-/* ---------- Test mode: sync every minute for the rest of today, then back to nightly only ---------- */
+/* ---------- Live window: every minute from 5 PM to midnight (Alberta), plus optional all-day test mode ---------- */
+
+const QBS_LIVE_FROM_HOUR = 17;
+
+/** One every-minute trigger; replaces the old single 10 PM trigger and any test trigger. */
+function qbsUseLiveWindow_() {
+  ScriptApp.getProjectTriggers()
+    .filter(t => ['qbsNightlySync', 'qbsTestTick'].includes(t.getHandlerFunction()))
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  if (!ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'qbsLiveTick')) {
+    ScriptApp.newTrigger('qbsLiveTick').timeBased().everyMinutes(1).create();
+  }
+}
+
+/** Run once from the editor to switch an existing install to the 5 PM–midnight live window. */
+function qbsSwitchToLiveWindow() {
+  qbsUseLiveWindow_();
+  qbsStatus_({status: 'Connected. Invoices update live from 5 PM to midnight (Alberta time).'});
+}
 
 function qbsTestModeToday() {
-  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'qbsTestTick').forEach(t => ScriptApp.deleteTrigger(t));
-  ScriptApp.newTrigger('qbsTestTick').timeBased().everyMinutes(1).create();
+  qbsUseLiveWindow_();
   PropertiesService.getScriptProperties().setProperty('QB_TEST_DAY', Utilities.formatDate(new Date(), QBS_TZ, 'yyyy-MM-dd'));
-  qbsStatus_({status: 'TEST MODE: tickets go to QuickBooks within about a minute until midnight tonight, then back to nightly at 10 PM.'});
+  qbsStatus_({status: 'TEST MODE: live all day today. From tomorrow, live 5 PM to midnight.'});
 }
 
-function qbsTestTick() {
+function qbsLiveTick() {
   const p = PropertiesService.getScriptProperties();
-  if (p.getProperty('QB_TEST_DAY') !== Utilities.formatDate(new Date(), QBS_TZ, 'yyyy-MM-dd')) {
-    ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'qbsTestTick').forEach(t => ScriptApp.deleteTrigger(t));
+  if (!p.getProperty('QB_REFRESH')) return; // not connected
+  const now = new Date();
+  const today = Utilities.formatDate(now, QBS_TZ, 'yyyy-MM-dd');
+  const hour = Number(Utilities.formatDate(now, QBS_TZ, 'H'));
+  const testDay = p.getProperty('QB_TEST_DAY');
+  if (testDay && testDay !== today) {
     p.deleteProperty('QB_TEST_DAY');
-    qbsStatus_({status: 'Connected. Invoices update nightly around 10 PM.'});
-    return;
+    qbsStatus_({status: 'Connected. Invoices update live from 5 PM to midnight (Alberta time).'});
   }
+  if (hour < QBS_LIVE_FROM_HOUR && testDay !== today) return;
   try {
-    const report = qbsSync_();
-    if (report.invoices.length) qbsPushAll_();
+    qbsNightlySync();
   } catch (e) {
-    qbsStatus_({status: 'TEST MODE sync failed: ' + e.message});
+    // qbsNightlySync already logged it; email the failure only once per day.
+    if (p.getProperty('QB_LAST_FAIL_DAY') !== today) p.setProperty('QB_LAST_FAIL_DAY', today);
   }
 }
+
+/* Kept so an old trigger left over from earlier installs still does something sensible. */
+function qbsTestTick() { qbsLiveTick(); }

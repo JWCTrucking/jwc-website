@@ -1,10 +1,10 @@
 # QuickBooks rolling invoices
 
-`QuickBooks.gs` builds JWC's QuickBooks invoices from the **Ticket Log** every night around 10 PM (Alberta time). It runs entirely inside JWC's own Google account and talks directly to JWC's own QuickBooks Online company. No AI, Claude, ChatGPT or paid service is needed for it to run.
+`QuickBooks.gs` builds JWC's QuickBooks invoices from the **Ticket Log** live every evening from 5 PM to midnight (Alberta time), checking every minute. It runs entirely inside JWC's own Google account and talks directly to JWC's own QuickBooks Online company. No AI, Claude, ChatGPT or paid service is needed for it to run.
 
 ## How it behaves
 
-- **One open invoice per customer.** Each night, new tickets are added as lines to that customer's open invoice. Jordan can send it after one day or after a week — whenever he wants.
+- **One open invoice per customer.** New tickets are added within about a minute (5 PM–midnight) as lines to that customer's open invoice. Jordan can send it after one day or after a week — whenever he wants.
 - **Never sends anything to customers.** Invoices are created unsent. Jordan reviews, edits and sends from QuickBooks.
 - **Nightly summary email to Jordan** (address on the **QuickBooks** tab, row 8; blank = no emails). It's sent only when invoices changed, there's something new to review, or the sync failed. It lists each invoice, the ticket count, the total with GST, and a link to open it in QuickBooks.
 - Unsent invoices still show as money owed (accounts receivable) in QuickBooks. QuickBooks Online has no true "draft".

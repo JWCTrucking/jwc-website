@@ -21,7 +21,7 @@ self.addEventListener('fetch',event=>{
 self.addEventListener('push',event=>{
   let data={};try{data=event.data?event.data.json():{};}catch{}
   event.waitUntil(self.registration.showNotification(data.title||'JWC invoices updated',{
-    body:data.body||"Tonight's tickets were added to QuickBooks invoices. Tap to review and send.",
+    body:data.body||"New tickets were added to QuickBooks invoices. Tap to review and send.",
     icon:'./jwc-icon-192.png',badge:'./jwc-icon-192.png',tag:'jwc-invoices',renotify:true,
     data:{url:data.url||'https://qbo.intuit.com/app/invoices'}
   }));
