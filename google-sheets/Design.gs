@@ -14,10 +14,13 @@ function refreshWorkbookDesign() {
   if (book.getSheetByName('Billing Data') || book.getSheetByName('Overview')) throw new Error('A redesigned view already exists. No changes made.');
   for (const name of ['Truck Log','Invoicing']) {
     const old = book.getSheetByName(name);
-    if (old) old.setName(name+' (previous)').hideSheet();
+    if (old) { old.setName(name+' (previous)'); old.hideSheet(); }
   }
   const rows=log.getMaxRows();
-  log.setHiddenGridlines(true).setFrozenRows(1).setFrozenColumns(1).setTabColor('#27374d');
+  log.setHiddenGridlines(true);
+  log.setFrozenRows(1);
+  log.setFrozenColumns(1);
+  log.setTabColor('#27374d');
   log.getRange(1,1,rows,17).setFontFamily('Arial').setFontSize(10).setFontColor('#243041').setVerticalAlignment('middle');
   log.getBandings().forEach(b=>b.remove());
   styleTable_(log,1,17,rows);
@@ -58,12 +61,14 @@ function refreshWorkbookDesign() {
   book.setActiveSheet(book.getSheetByName('Overview')); book.moveActiveSheet(1); SpreadsheetApp.flush(); console.log(book.getUrl()); return book.getUrl();
 }
 function viewHeader_(sheet,columns,title,subtitle) {
-  sheet.setHiddenGridlines(true).setFrozenRows(5).setTabColor('#61758e');
+  sheet.setHiddenGridlines(true);
+  sheet.setFrozenRows(5);
+  sheet.setTabColor('#61758e');
   sheet.getRange(1,1,sheet.getMaxRows(),columns).setFontFamily('Arial').setFontSize(10).setFontColor('#243041').setVerticalAlignment('middle');
   sheet.getRange(1,1,1,columns).merge().setValue('JWC  /  '+title).setBackground('#172331').setFontColor('#ffffff').setFontSize(20).setFontWeight('bold');
   sheet.getRange(2,1,1,columns).merge().setValue(subtitle).setFontColor('#64748b').setBackground('#eef2f6');
   sheet.getRange(3,1,1,columns).setBackground('#e2e8f0').setFontWeight('bold');
-  sheet.setRowHeight(1,52).setRowHeight(2,34).setRowHeight(3,40).setRowHeight(4,14);
+  sheet.setRowHeight(1,52); sheet.setRowHeight(2,34); sheet.setRowHeight(3,40); sheet.setRowHeight(4,14);
 }
 function styleTable_(sheet,startRow,columns,rows) {
   sheet.getRange(startRow,1,rows,columns).applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY,true,false).setHeaderRowColor('#27374d').setFirstRowColor('#ffffff').setSecondRowColor('#f1f5f9');
@@ -73,7 +78,7 @@ function styleTable_(sheet,startRow,columns,rows) {
 
 function buildOverview_(book,log,trucks,billing) {
   const sheet=book.insertSheet('Overview');
-  sheet.setHiddenGridlines(true).setTabColor('#172331');
+  sheet.setHiddenGridlines(true); sheet.setTabColor('#172331');
   sheet.setColumnWidths(1,12,100); sheet.setRowHeights(1,22,28);
   sheet.getRange('A1:L22').setBackground('#f1f5f9').setFontFamily('Arial').setFontColor('#243041');
   sheet.getRange('A1:L4').setBackground('#08090b');
