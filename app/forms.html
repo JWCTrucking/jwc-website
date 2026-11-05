@@ -13,9 +13,10 @@
 [hidden]{display:none!important}.app-tabs{display:flex;gap:8px;margin:0 0 24px;padding:5px;border:1px solid #343a43;border-radius:10px;background:#14181e}.app-tabs a{flex:1;text-align:center;text-decoration:none;color:#aeb8c7;padding:14px 8px;border-radius:6px;font-weight:700;font-size:14px}.app-tabs a[aria-current="page"]{background:linear-gradient(120deg,#9ca3ad,#f1f3f5,#a5adb7);color:#101216}
 @media print{.app-tabs{display:none}}
 </style>
+<link rel="stylesheet" href="form-ui.css">
 </head>
 <body data-initial-view="tickets">
-<header><div class="brand"><img class="brand-logo" src="../assets/jwc-logo-form.png" alt="JWC Contracting Ltd."></div><a href="./">Back to app</a></header>
+<header class="form-appbar"><a class="form-back" href="./" aria-label="Back to app">‹</a><strong class="screen-title" id="app-screen-title">Field ticket</strong><div class="brand"><img class="brand-logo" src="../assets/jwc-logo-form.png" alt="JWC"></div></header>
 <main>
 <nav class="app-tabs" aria-label="App sections"><a href="#tickets" data-view="tickets" aria-current="page">Field ticket</a><a href="#maintenance" data-view="maintenance">Maintenance</a></nav>
 <div id="ticket-view">

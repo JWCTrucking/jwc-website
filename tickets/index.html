@@ -15,7 +15,7 @@
 </style>
 </head>
 <body data-initial-view="tickets">
-<header><div class="brand"><img class="brand-logo" src="../assets/jwc-logo.png" alt="JWC Contracting Ltd."></div><a href="../">Back to website</a></header>
+<header class="form-appbar"><a class="form-back" href="https://www.jwchauling.com/app/" aria-label="Back to app">‹</a><strong class="screen-title" id="app-screen-title">Field ticket</strong><div class="brand"><img class="brand-logo" src="../assets/jwc-logo.png" alt="JWC"></div></header>
 <main>
 <nav class="app-tabs" aria-label="App sections"><a href="#tickets" data-view="tickets" aria-current="page">Field ticket</a><a href="#maintenance" data-view="maintenance">Maintenance</a></nav>
 <div id="ticket-view">
@@ -32,7 +32,7 @@
 </div></fieldset>
 <fieldset><legend><span class="section-number">02</span>Truck &amp; driver</legend><div class="grid">
 <div><label for="truck">Truck number</label><select id="truck" required><option value="">Select truck</option><option>820</option><option>822</option><option>823</option><option>824</option></select></div>
-<div><label for="driver">Driver name</label><select id="driver"><option>Jordan Cowan</option></select></div>
+<div><label for="driver">Driver name</label><input id="driver" autocomplete="name" placeholder="Enter driver name" required></div>
 <div class="wide"><label for="hours">Truck hours</label><input id="hours" type="number" min="0" step="0.25" inputmode="decimal" placeholder="e.g. 8.5" required></div>
 </div></fieldset>
 <fieldset><legend><span class="section-number">03</span>Equipment &amp; work</legend><div class="grid">
@@ -115,6 +115,7 @@ $('form').onsubmit = event => {
 clearForm();
 function showAppView(view) {
   const maintenance = view === 'maintenance';
+  $('app-screen-title').textContent = maintenance ? 'Maintenance' : 'Field ticket';
   $('ticket-view').hidden = maintenance;
   $('maintenance-view').hidden = !maintenance;
   document.querySelectorAll('[data-view]').forEach(link => {

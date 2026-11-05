@@ -27,6 +27,7 @@ function deliverMaintenance(entry, success, failure) {
 /* MAINTENANCE_ADAPTER_END */"""
 html, maintenance_count = re.subn(r'/\* MAINTENANCE_ADAPTER_START \*/.*?/\* MAINTENANCE_ADAPTER_END \*/', lambda _: maintenance_adapter, html, flags=re.S)
 assert maintenance_count == 1, 'Maintenance adapter changed; update the build.'
+html = html.replace('</style>', '\n' + (root / 'app' / 'form-ui.css').read_text() + '\n</style>', 1)
 output.write_text(html)
 print(output)
 

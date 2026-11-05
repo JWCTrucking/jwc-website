@@ -64,6 +64,10 @@ try {
 @keyframes letters-out{from{opacity:1;transform:none}to{opacity:0;transform:scale(1.12)}}
 @keyframes logo-takeover{0%{opacity:0;transform:translateX(-3%) scale(.82)}35%{opacity:1;transform:translateX(0) scale(.98)}75%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:scale(1.1)}}
 
+.form-screen[hidden]{display:none}.form-screen{position:fixed;inset:0;z-index:90;background:#0b0e12;animation:form-screen-enter .24s ease-out}.form-screen iframe{display:block;width:100%;height:100%;border:0;background:#0b0e12}body.form-open{overflow:hidden}
+@keyframes form-screen-enter{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.form-screen{animation:none}}
+
 </style>
 </head>
 <body>
@@ -84,6 +88,7 @@ try {
 </main>
 <footer>JWC Contracting Ltd. · <a href="../">Company website</a></footer>
 </div>
+<section class="form-screen" id="form-screen" aria-label="JWC form" hidden><iframe id="form-frame" title="JWC form screen"></iframe></section>
 <script>
 const opening=document.getElementById('opening');
 const shell=document.getElementById('app-shell');
@@ -124,7 +129,30 @@ reducedMotion.addEventListener('change',event=>{if(event.matches)finishOpening()
 const offlineMessage=document.getElementById('offline-message');
 function updateConnection(){offlineMessage.hidden=navigator.onLine;}
 window.addEventListener('online',updateConnection);window.addEventListener('offline',updateConnection);updateConnection();
-document.querySelectorAll('.action').forEach(link=>link.addEventListener('click',event=>{if(!navigator.onLine){event.preventDefault();offlineMessage.hidden=false;offlineMessage.scrollIntoView({block:'center',behavior:'smooth'});}}));
+// Enable after the Google POST receiver has been deployed and a real submission confirmed.
+const ownedFormsReady=false;
+const formScreen=document.getElementById('form-screen');
+const formFrame=document.getElementById('form-frame');
+let lastFormLink;
+function openForm(view,link){
+  lastFormLink=link||document.querySelector('.action');
+  formFrame.title=view==='maintenance'?'Maintenance':'Field ticket';
+  formFrame.src='forms.html?view='+encodeURIComponent(view);
+  formScreen.hidden=false;document.body.classList.add('form-open');shell.inert=true;
+  history.pushState({jwcForm:view},'', '#'+view);
+}
+function closeForm(){
+  formScreen.hidden=true;document.body.classList.remove('form-open');shell.inert=false;
+  formFrame.src='about:blank';
+  if(location.hash==='#tickets'||location.hash==='#maintenance')history.replaceState(null,'',location.pathname+location.search);
+  if(lastFormLink)lastFormLink.focus({preventScroll:true});
+}
+window.addEventListener('message',event=>{if(event.origin===location.origin&&event.source===formFrame.contentWindow&&event.data?.type==='JWC_CLOSE_FORM')closeForm();});
+window.addEventListener('popstate',()=>{if(!formScreen.hidden)closeForm();});
+document.querySelectorAll('.action').forEach(link=>link.addEventListener('click',event=>{
+  if(!navigator.onLine){event.preventDefault();offlineMessage.hidden=false;offlineMessage.scrollIntoView({block:'center',behavior:'smooth'});return;}
+  if(ownedFormsReady){event.preventDefault();openForm(new URL(link.href).searchParams.get('view')==='maintenance'?'maintenance':'tickets',link);}
+}));
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body></html>
