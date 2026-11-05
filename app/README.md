@@ -1,6 +1,6 @@
 # JWC Field App welcome screen
 
-`/app/` is the staff home-screen entry point. A brief silver flash introduces chrome J, W, C letters, followed by the full hauling photograph and Welcome to JWC heading. Two buttons open Field Tickets or Maintenance. The intro runs once per tab session, has a Skip intro button, and is skipped for reduced-motion users. Home-screen icons use the supplied official JWC logo. There is no form or Google sign-in control on this welcome page.
+`/app/` is the staff home-screen entry point. A brief silver flash introduces chrome J, W, C letters, then the official logo grows to fill the screen before panning into the full hauling photograph and Welcome to JWC heading. Two buttons open Field Tickets or Maintenance. The intro runs on every fresh page load and after returning from at least five minutes in the background. There is no Skip intro button. Reduced-motion users reach the welcome screen immediately. Home-screen icons use the supplied official JWC logo. There is no form or Google sign-in control on this welcome page.
 
 The buttons open the existing public Google Apps Script deployment with `view=tickets` or `view=maintenance`. To allow submissions without employee Google accounts, that Google deployment must be configured to execute as its owner with access set to Anyone. The repository cannot change that account setting or confirm anonymous access from this workspace.
 
