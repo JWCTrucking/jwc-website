@@ -17,6 +17,7 @@ print(output)
 # Single-file installer: one paste into Apps Script, with the current mobile form embedded.
 import json
 code = (root / 'google-sheets' / 'Code.gs').read_text()
+code += '\n' + (root / 'google-sheets' / 'Design.gs').read_text()
 code = code.replace("HtmlService.createHtmlOutputFromFile('Tickets')", 'HtmlService.createHtmlOutput(JWC_TICKET_HTML)')
 bundle = root / 'google-sheets' / 'JWC-Sheets-Setup.gs'
 bundle.write_text(code + '\nconst JWC_TICKET_HTML = ' + json.dumps(html) + ';\n')

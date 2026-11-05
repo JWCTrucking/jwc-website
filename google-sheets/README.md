@@ -15,11 +15,14 @@ The connected app stores tickets locally first and confirms “Saved to Google S
 
 ## Workbook tabs and billing
 
-- **Ticket Log:** one row per ticket ID. Re-saving updates the original row. Columns N (billing quantity), O (unit rate), and Q (invoice number) are manual billing inputs. Quantity defaults to truck hours on a new ticket; use 1 for a flat charge. Rates are deliberately blank. Amount calculates quantity × rate. Billing quantity initially follows truck hours with a formula; updates to hours update the default billed quantity too. A manually overridden quantity is preserved, along with the rate and invoice assignment.
-- **Truck Log:** automatically shows date, truck, driver, hours, customer, job, and ticket ID from Ticket Log.
-- **Invoicing:** assign an invoice number to the required tickets in column Q, then select that number in B2. Lines, customer, subtotal, tax, and total populate. Enter invoice date, due date and applicable tax percentage manually. Tax defaults to 0, not an assumed jurisdictional rate. Use a unique invoice number per customer and check all rates before issuing. Missing rates or mixed customers show a NOT READY warning and suppress totals: resolve these before issuing. Export/print this tab after checking it. This is invoice preparation, not accounting or a frozen invoice ledger.
+- **Overview:** JWC logo, ticket count, total truck hours, unpriced tickets, and links to the main logs.
+- **Ticket Log:** the source data. Billable quantity follows hours by default; agreed rates are entered manually in the yellow rate cells. Amount is quantity × rate. Rate and quantity overrides survive ticket updates. Column Q is an optional QuickBooks reference.
+- **Truck Log:** styled live activity, sorted by truck and date, with total tickets and hours.
+- **Billing Data:** customer, ticket, date, truck, hours, quantity, rate, amount, job description and optional QuickBooks reference. This is preparation data, not an invoice or a confirmed QuickBooks import format. No accounting connection has been deployed.
 
-Keep the original Ticket Log headers and data column positions. Do not type into Truck Log or invoice line formulas. The formulas refresh from the live ticket data: retain a PDF of issued invoices.
+Existing installations: add the contents of Design.gs as a new Apps Script file and run `refreshWorkbookDesign`. Existing Truck Log and Invoicing tabs are archived and hidden, not deleted; original ticket data and manual rates are preserved. The update stops before making changes if conflicting archive/view names already exist. Running after a successful update returns without repeating it. The logo uses a public image URL via Sheets IMAGE, so external image access must be allowed if Google prompts.
+
+Keep Ticket Log data columns in their original positions. Edit billing inputs there, not in the automatically generated views. Blank rates remain unpriced rather than implying a free haul. Driver and billing access are still shared at workbook level; a separate access design is required to hide rates from drivers.
 
 ## Updating the connected form
 
