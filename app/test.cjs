@@ -1,2 +1,41 @@
 const {chromium}=require('playwright'),http=require('http'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
-(async()=>{const root=path.resolve(__dirname,'..');const server=http.createServer((q,r)=>{let file=path.join(root,q.url.split('?')[0]);if(file.endsWith('/'))file+='index.html';fs.readFile(file,(err,data)=>{r.statusCode=err?404:200;r.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.png')?'image/png':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.webmanifest')?'application/manifest+json':'text/html');r.end(err?'Missing':data)})});await new Promise(r=>server.listen(8001,r));let b;try{b=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});for(const width of [320,390,768,1440]){const ctx=await b.newContext({viewport:{width,height:900}});const p=await ctx.newPage();await p.goto('http://127.0.0.1:8001/app/');await p.locator('.photo img').evaluate(i=>i.decode());await p.locator('.brand img').evaluate(i=>i.decode());assert(await p.getByRole('heading',{name:'WELCOME TO JWC',exact:true}).isVisible());assert.equal(await p.locator('form').count(),0);assert.equal(await p.locator('#connect-google').count(),0);assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));for(const [name,view] of [['Field Tickets','tickets'],['Maintenance','maintenance']]){const link=p.getByRole('link',{name,exact:true});const href=await link.getAttribute('href');assert(href.startsWith('https://script.google.com/macros/s/'));assert(href.endsWith('?view='+view));await p.route(href,r=>r.fulfill({contentType:'text/html',body:'<h1>Form opened</h1>'}));await link.click();await p.waitForURL(href);await p.goBack();}await p.waitForFunction(()=>!document.documentElement.classList.contains('intro-running'));await p.screenshot({path:`/workspace/previews/app-welcome-${width}.png`,fullPage:true});await p.goto('http://127.0.0.1:8001/tickets/');await p.waitForURL('http://127.0.0.1:8001/app/');await p.evaluate(()=>navigator.serviceWorker.ready);await p.reload();await ctx.setOffline(true);await p.reload();assert(await p.getByRole('heading',{name:'WELCOME TO JWC'}).isVisible());await p.getByRole('link',{name:'Field Tickets',exact:true}).click();assert(p.url().includes('/app/'));assert(await p.locator('#offline-message').isVisible());await ctx.close();console.log(width,'welcome, full photo, two form links, old entry redirect, offline home, screen fit passed');}}finally{if(b)await b.close();server.close()}})().catch(e=>{console.error(e);process.exit(1)});
+(async()=>{
+ const root=path.resolve(__dirname,'..');
+ const server=http.createServer((q,r)=>{
+  let file=path.join(root,q.url.split('?')[0]);if(file.endsWith('/'))file+='index.html';
+  fs.readFile(file,(err,data)=>{
+   r.statusCode=err?404:200;
+   r.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.png')?'image/png':file.endsWith('.webmanifest')?'application/manifest+json':'text/html');r.end(err?'Missing':data);
+  });
+ });
+ await new Promise(resolve=>server.listen(8001,resolve));let browser;
+ try{
+  browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+  for(const width of [320,390,768,1440]){
+   const context=await browser.newContext({viewport:{width,height:900}});
+   const p=await context.newPage();await p.goto('http://127.0.0.1:8001/app/');
+   await p.waitForFunction(()=>!document.documentElement.classList.contains('intro-running'));
+   await p.locator('.photo img').evaluate(i=>i.decode());
+   assert(await p.getByRole('link',{name:'Field Tickets',exact:true}).isVisible());assert.equal(await p.getByText('WELCOME TO JWC',{exact:true}).count(),0);
+   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   for(const [name,view,title] of [['Field Tickets','tickets','Field ticket'],['Maintenance','maintenance','Maintenance']]){
+    await p.getByRole('link',{name,exact:true}).click();
+    const frame=p.frameLocator('#form-frame');await frame.locator('#app-screen-title').getByText(title,{exact:true}).waitFor();
+    assert.equal(new URL(p.url()).origin,'http://127.0.0.1:8001');
+    assert(await p.locator('#form-frame').evaluate(f=>new URL(f.src).origin===location.origin));
+    assert(await frame.locator('body').evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    assert.equal(await frame.locator('button[type=submit]:visible').count(),1);
+    await frame.getByRole('link',{name:'Back to app',exact:true}).click();
+    await p.waitForFunction(()=>document.getElementById('form-screen').hidden);
+   }
+   await p.screenshot({path:`/workspace/previews/app-welcome-${width}.png`,fullPage:true});
+   await p.goto('http://127.0.0.1:8001/tickets/');await p.waitForURL('http://127.0.0.1:8001/app/');
+   await p.evaluate(()=>navigator.serviceWorker.ready);await p.reload();
+   await context.setOffline(true);await p.reload();await p.waitForFunction(()=>!document.documentElement.classList.contains('intro-running'));
+   await p.getByRole('link',{name:'Field Tickets',exact:true}).click();
+   assert(await p.locator('#offline-message').isVisible());assert(await p.locator('#form-screen').isHidden());
+   console.log(width,'app welcome, same-origin form screens, one Submit, app back navigation, phone fit, offline notice passed');
+   await context.close();
+  }
+ }finally{if(browser)await browser.close();server.close();}
+})().catch(e=>{console.error(e);process.exit(1)});

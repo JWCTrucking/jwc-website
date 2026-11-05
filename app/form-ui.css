@@ -16,3 +16,5 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:1px soli
 .savebar{background:#0c1016f5;border-color:#343f4e;padding:12px 16px calc(12px + env(safe-area-inset-bottom));backdrop-filter:blur(14px)}.savebar-inner{max-width:608px}.savebar button{min-height:54px;border-radius:11px;font-size:17px;font-weight:800}.status{font-size:13px;margin-bottom:10px}.status:empty{display:none}
 @media(min-width:600px){main{padding-top:24px}.panel{padding:0}.grid{grid-template-columns:minmax(0,1fr);gap:0}.checks{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media print{.form-appbar,.app-tabs{display:none!important}.heading{display:block}.grid{border:0;background:white}.grid>div{padding:8px;border-color:#aaa}input,select,textarea,label,.field-label{color:black}.panel{padding:0}}
+
+body.is-embedded .form-appbar{padding-top:10px}body.is-embedded .savebar{padding-bottom:12px}

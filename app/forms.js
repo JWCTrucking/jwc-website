@@ -41,4 +41,4 @@ for(const kind of ['ticket','maintenance']){
 }
 showView(new URLSearchParams(location.search).get('view'));
 
-if(window.parent!==window){document.querySelector('.form-back').addEventListener('click',event=>{event.preventDefault();window.parent.postMessage({type:'JWC_CLOSE_FORM'},location.origin);});}
+if(window.parent!==window){document.body.classList.add('is-embedded');document.querySelector('.form-back').addEventListener('click',event=>{event.preventDefault();window.parent.postMessage({type:'JWC_CLOSE_FORM'},location.origin);});}
