@@ -42,6 +42,7 @@ function qbsOnOpen() {
     .addItem('Connect QuickBooks', 'qbsConnect')
     .addItem('Sync invoices now', 'qbsSyncNow')
     .addItem('Set up phone alerts', 'qbsShowPhoneAlerts')
+    .addItem('Instant sync (today only, for testing)', 'qbsTestModeToday')
     .addSeparator()
     .addItem('Show Intuit redirect URL', 'qbsShowRedirect')
     .addItem('Disconnect QuickBooks', 'qbsDisconnect')
@@ -664,3 +665,28 @@ function qbsBytesToBig_(b) { let x = QBS_B0; for (let i = 0; i < b.length; i++) 
 function qbsBigToBytes_(x, len) { const out = new Array(len); for (let i = len - 1; i >= 0; i--) { out[i] = Number(x & QBS_B255); x >>= QBS_B8; } return out; }
 function qbsSigned_(arr) { return arr.map(v => (v & 255) > 127 ? (v & 255) - 256 : (v & 255)); }
 function qbsB64u_(bytes) { return Utilities.base64EncodeWebSafe(qbsSigned_(Array.from(bytes))).replace(/=+$/, ''); }
+
+/* ---------- Test mode: sync every minute for the rest of today, then back to nightly only ---------- */
+
+function qbsTestModeToday() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'qbsTestTick').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('qbsTestTick').timeBased().everyMinutes(1).create();
+  PropertiesService.getScriptProperties().setProperty('QB_TEST_DAY', Utilities.formatDate(new Date(), QBS_TZ, 'yyyy-MM-dd'));
+  qbsStatus_({status: 'TEST MODE: tickets go to QuickBooks within about a minute until midnight tonight, then back to nightly at 10 PM.'});
+}
+
+function qbsTestTick() {
+  const p = PropertiesService.getScriptProperties();
+  if (p.getProperty('QB_TEST_DAY') !== Utilities.formatDate(new Date(), QBS_TZ, 'yyyy-MM-dd')) {
+    ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'qbsTestTick').forEach(t => ScriptApp.deleteTrigger(t));
+    p.deleteProperty('QB_TEST_DAY');
+    qbsStatus_({status: 'Connected. Invoices update nightly around 10 PM.'});
+    return;
+  }
+  try {
+    const report = qbsSync_();
+    if (report.invoices.length) qbsPushAll_();
+  } catch (e) {
+    qbsStatus_({status: 'TEST MODE sync failed: ' + e.message});
+  }
+}
