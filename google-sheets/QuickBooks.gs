@@ -516,7 +516,7 @@ function qbsSetupPush() {
   const p = PropertiesService.getScriptProperties();
   if (!p.getProperty('QB_VAPID_D')) {
     const seed = Utilities.getUuid() + Utilities.getUuid() + Date.now() + Math.random();
-    const d = qbsMod_(qbsBytesToBig_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, seed)), QBS_EC.n - 1n) + 1n;
+    const d = qbsMod_(qbsBytesToBig_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, seed)), QBS_EC.n - QBS_B1) + QBS_B1;
     const pub = qbsEcMul_(d, QBS_EC.G);
     p.setProperties({
       QB_VAPID_D: d.toString(16),
@@ -609,15 +609,16 @@ function qbsVapidJwt_(aud, d) {
   return unsigned + '.' + qbsB64u_(qbsEcdsaSign_(Utilities.newBlob(unsigned).getBytes(), d));
 }
 
+const QBS_B0 = BigInt(0), QBS_B1 = BigInt(1), QBS_B2 = BigInt(2), QBS_B3 = BigInt(3), QBS_B8 = BigInt(8), QBS_B255 = BigInt(255);
 /* P-256 ECDSA (ES256) with deterministic nonces (RFC 6979). Apps Script has no built-in EC signing. */
 const QBS_EC = {
-  p: 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffffn,
-  n: 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551n,
-  G: {x: 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296n, y: 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5n},
+  p: BigInt('0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff'),
+  n: BigInt('0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551'),
+  G: {x: BigInt('0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296'), y: BigInt('0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5')},
 };
-function qbsMod_(a, m) { const r = a % m; return r < 0n ? r + m : r; }
+function qbsMod_(a, m) { const r = a % m; return r < QBS_B0 ? r + m : r; }
 function qbsInv_(a, m) {
-  let t = 0n, nt = 1n, r = m, nr = qbsMod_(a, m);
+  let t = QBS_B0, nt = QBS_B1, r = m, nr = qbsMod_(a, m);
   while (nr) { const q = r / nr; [t, nt] = [nt, t - q * nt]; [r, nr] = [nr, r - q * nr]; }
   return qbsMod_(t, m);
 }
@@ -627,8 +628,8 @@ function qbsEcAdd_(P, Q) {
   if (!Q) return P;
   let l;
   if (P.x === Q.x) {
-    if (qbsMod_(P.y + Q.y, p) === 0n) return null;
-    l = qbsMod_(3n * P.x * P.x - 3n, p) * qbsInv_(2n * P.y, p) % p;
+    if (qbsMod_(P.y + Q.y, p) === QBS_B0) return null;
+    l = qbsMod_(QBS_B3 * P.x * P.x - QBS_B3, p) * qbsInv_(QBS_B2 * P.y, p) % p;
   } else {
     l = qbsMod_(Q.y - P.y, p) * qbsInv_(Q.x - P.x, p) % p;
   }
@@ -637,7 +638,7 @@ function qbsEcAdd_(P, Q) {
 }
 function qbsEcMul_(k, P) {
   let R = null, A = P;
-  while (k > 0n) { if (k & 1n) R = qbsEcAdd_(R, A); A = qbsEcAdd_(A, A); k >>= 1n; }
+  while (k > QBS_B0) { if (k & QBS_B1) R = qbsEcAdd_(R, A); A = qbsEcAdd_(A, A); k >>= QBS_B1; }
   return R;
 }
 function qbsEcdsaSign_(msgBytes, d) {
@@ -651,15 +652,15 @@ function qbsEcdsaSign_(msgBytes, d) {
   for (;;) {
     V = hmac(K, V);
     const k = qbsBytesToBig_(V);
-    if (k > 0n && k < n) {
+    if (k > QBS_B0 && k < n) {
       const r = qbsMod_(qbsEcMul_(k, QBS_EC.G).x, n);
       const s = qbsMod_(qbsInv_(k, n) * (h + r * d), n);
-      if (r !== 0n && s !== 0n) return qbsBigToBytes_(r, 32).concat(qbsBigToBytes_(s, 32));
+      if (r !== QBS_B0 && s !== QBS_B0) return qbsBigToBytes_(r, 32).concat(qbsBigToBytes_(s, 32));
     }
     K = hmac(K, V.concat([0])); V = hmac(K, V);
   }
 }
-function qbsBytesToBig_(b) { let x = 0n; for (let i = 0; i < b.length; i++) x = (x << 8n) | BigInt(b[i] & 255); return x; }
-function qbsBigToBytes_(x, len) { const out = new Array(len); for (let i = len - 1; i >= 0; i--) { out[i] = Number(x & 255n); x >>= 8n; } return out; }
+function qbsBytesToBig_(b) { let x = QBS_B0; for (let i = 0; i < b.length; i++) x = (x << QBS_B8) | BigInt(b[i] & 255); return x; }
+function qbsBigToBytes_(x, len) { const out = new Array(len); for (let i = len - 1; i >= 0; i--) { out[i] = Number(x & QBS_B255); x >>= QBS_B8; } return out; }
 function qbsSigned_(arr) { return arr.map(v => (v & 255) > 127 ? (v & 255) - 256 : (v & 255)); }
 function qbsB64u_(bytes) { return Utilities.base64EncodeWebSafe(qbsSigned_(Array.from(bytes))).replace(/=+$/, ''); }
