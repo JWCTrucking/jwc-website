@@ -1,11 +1,16 @@
 /** JWC ticket workbook and authenticated ticket app. Deploy as the user accessing the app. */
+const TARGET_SPREADSHEET_ID = '1-9vgsLWZLjXDXYxb24oecuvYh8_C2Nr2NtXJ1RKxTE4';
 const HEADERS = ['Ticket ID','Submitted','Date','Customer','Job number','Truck','Driver','Truck hours','Jeep','Booster','Tridem','Description','Updated','Billing quantity','Unit rate','Amount','Invoice number'];
 function setupWorkbook() {
   const props = PropertiesService.getScriptProperties();
   const existing = props.getProperty('SPREADSHEET_ID');
+  if (existing && existing !== TARGET_SPREADSHEET_ID) throw new Error('This script is already connected to a different workbook. No changes made.');
   if (existing) return SpreadsheetApp.openById(existing).getUrl();
-  const book = SpreadsheetApp.create('JWC — Tickets, Trucks & Invoicing');
-  const log = book.getSheets()[0]; log.setName('Ticket Log');
+  const book = SpreadsheetApp.openById(TARGET_SPREADSHEET_ID);
+  for (const name of ['Ticket Log','Truck Log','Invoicing']) {
+    if (book.getSheetByName(name)) throw new Error('A tab named '+name+' already exists. Setup stopped to preserve existing data.');
+  }
+  const log = book.insertSheet('Ticket Log');
   log.getRange(1,1,1,HEADERS.length).setValues([HEADERS]); log.setFrozenRows(1);
   log.getRange('A1:Q1').setFontWeight('bold').setBackground('#20252d').setFontColor('#ffffff');
   log.getRange('N1').setNote('Defaults to truck hours. Edit for flat or other charges; use 1 for a flat charge.');

@@ -6,7 +6,7 @@ This project prepares a live, authenticated version of the ticket app. The publi
 
 1. Open https://script.google.com and create a standalone project using the company's Google account.
 2. Replace the default script with the complete contents of **JWC-Sheets-Setup.gs**. This single file includes both the workbook setup and the mobile ticket form. (Code.gs and Tickets.html are separate source files; do not paste them as well.)
-3. Run `setupWorkbook`, authorize access, and open the workbook URL in the execution log. Running setup again returns the same workbook; it does not clear existing data.
+3. Run `setupWorkbook` and authorize access. The script adds the three tabs to the supplied JWC workbook: https://docs.google.com/spreadsheets/d/1-9vgsLWZLjXDXYxb24oecuvYh8_C2Nr2NtXJ1RKxTE4/edit . Existing tabs are preserved, and conflicting tab names stop setup before changes. Running setup again returns the same workbook; it does not clear existing data.
 4. Share the workbook with the staff Google accounts that may submit tickets, granting Editor access. Treat this as billing access too; a separate restricted submission service is needed if drivers must not see billing.
 5. Choose **Deploy → New deployment → Web app**. Execute as **User accessing the web app**. Restrict access to your organization if available; otherwise Google accounts. Do not deploy anonymously or execute as the owner. Every user must authorize the app and have workbook edit access.
 6. Send the deployed `/exec` URL back to the website maintainer so the Field Tickets link can open the connected app. Test with a staff account before switching the website link.
