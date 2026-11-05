@@ -5,7 +5,8 @@
 ## How it behaves
 
 - **One open invoice per customer.** Each night, new tickets are added as lines to that customer's open invoice. Jordan can send it after one day or after a week — whenever he wants.
-- **Never sends anything.** Invoices are created unsent. Jordan reviews, edits and sends from QuickBooks.
+- **Never sends anything to customers.** Invoices are created unsent. Jordan reviews, edits and sends from QuickBooks.
+- **Nightly summary email to Jordan** (address on the **QuickBooks** tab, row 8; blank = no emails). It's sent only when invoices changed, there's something new to review, or the sync failed. It lists each invoice, the ticket count, the total with GST, and a link to open it in QuickBooks.
 - Unsent invoices still show as money owed (accounts receivable) in QuickBooks. QuickBooks Online has no true "draft".
 - **After an invoice is emailed, printed, paid (even partly) or voided, it is never changed again.** That customer's next tickets start a new invoice.
 - To start a fresh invoice for a customer without sending the current one, tick **Start a new invoice next sync** in the **QB Invoices** tab.

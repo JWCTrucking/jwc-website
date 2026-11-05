@@ -11,7 +11,9 @@
  *  - Lines Jordan adds or edits in QuickBooks are kept as he left them.
  *  - Once an invoice is emailed, printed, paid (even partly) or voided, it is never touched again;
  *    the customer's next tickets start a new invoice.
- *  - Nothing is ever emailed, sent or charged. Jordan reviews and sends in QuickBooks.
+ *  - Nothing is ever emailed, sent or charged to customers. Jordan reviews and sends in QuickBooks.
+ *  - After the nightly run, Jordan gets a summary email (only when invoices changed, there is
+ *    something new to review, or the sync failed).
  */
 const QBS_SHEET_ID = '1-9vgsLWZLjXDXYxb24oecuvYh8_C2Nr2NtXJ1RKxTE4';
 const QBS_TZ = 'America/Edmonton';
@@ -89,20 +91,69 @@ function qbsDisconnect() {
 }
 
 function qbsSyncNow() {
-  const summary = qbsNightlySync();
-  SpreadsheetApp.getUi().alert(summary);
+  let report;
+  try { report = qbsSync_(); }
+  catch (e) { qbsStatus_({status: 'Last sync FAILED: ' + e.message}); throw e; }
+  SpreadsheetApp.getUi().alert(report.summary);
 }
 
 function qbsNightlySync() {
-  try { return qbsSync_(); }
-  catch (e) { qbsStatus_({status: 'Last sync FAILED: ' + e.message}); throw e; }
+  let report;
+  try { report = qbsSync_(); }
+  catch (e) {
+    qbsStatus_({status: 'Last sync FAILED: ' + e.message});
+    qbsNotify_({failed: e.message});
+    throw e;
+  }
+  const p = PropertiesService.getScriptProperties();
+  const fingerprint = report.problems.join('\n');
+  const newProblems = fingerprint !== (p.getProperty('QB_LAST_PROBLEMS') || '');
+  if (report.invoices.length || (report.problems.length && newProblems)) qbsNotify_(report);
+  p.setProperty('QB_LAST_PROBLEMS', fingerprint);
+  return report.summary;
+}
+
+/** Summary email to Jordan after the nightly run. Goes only to the address on the QuickBooks tab. */
+function qbsNotify_(report) {
+  const to = qbsNotifyEmail_();
+  if (!to) return;
+  const sheetUrl = 'https://docs.google.com/spreadsheets/d/' + QBS_SHEET_ID + '/edit';
+  const style = 'font-family:Arial,sans-serif;color:#111418';
+  let subject, html;
+  if (report.failed) {
+    subject = 'JWC invoices: nightly QuickBooks update FAILED';
+    html = '<div style="' + style + '"><p><b>Tonight\'s QuickBooks update did not run.</b></p><p>' + qbsEsc_(report.failed) + '</p>' +
+      '<p>If it says the sign-in expired: open the sheet → <b>QuickBooks</b> menu → <b>Connect QuickBooks</b>.</p>' +
+      '<p><a href="' + sheetUrl + '">Open JWC Master Tickets</a></p></div>';
+  } else {
+    const money = n => '$' + Number(n || 0).toLocaleString('en-CA', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const rows = report.invoices.map(i =>
+      '<tr><td style="padding:6px 12px 6px 0">' + qbsEsc_(i.customer) + '</td>' +
+      '<td style="padding:6px 12px 6px 0"><a href="https://qbo.intuit.com/app/invoice?txnId=' + encodeURIComponent(i.id) + '">Invoice #' + qbsEsc_(i.doc) + '</a>' + (i.isNew ? ' (new)' : '') + '</td>' +
+      '<td style="padding:6px 12px 6px 0">' + i.lines + ' ticket' + (i.lines === 1 ? '' : 's') + '</td>' +
+      '<td style="padding:6px 0;text-align:right"><b>' + money(i.total) + '</b></td></tr>').join('');
+    const lines = report.invoices.reduce((n, i) => n + i.lines, 0);
+    subject = report.invoices.length
+      ? 'JWC invoices updated: ' + report.invoices.length + ' invoice' + (report.invoices.length === 1 ? '' : 's') + ', ' + lines + ' ticket' + (lines === 1 ? '' : 's')
+      : 'JWC invoices: ' + report.problems.length + ' item' + (report.problems.length === 1 ? '' : 's') + ' to review';
+    html = '<div style="' + style + '">' +
+      (rows ? '<p>Tonight\'s tickets were added to these QuickBooks invoices. <b>Nothing was sent to customers.</b> Review and send them in QuickBooks when you\'re ready.</p><table style="border-collapse:collapse">' + rows + '</table><p style="color:#555;font-size:13px">Totals include GST.</p>' : '') +
+      (report.problems.length ? '<p><b>To review</b></p><ul>' + report.problems.map(p => '<li>' + qbsEsc_(p) + '</li>').join('') + '</ul>' : '') +
+      '<p><a href="' + sheetUrl + '">Open JWC Master Tickets</a></p></div>';
+  }
+  MailApp.sendEmail({to: to, subject: subject, htmlBody: html, name: 'JWC Invoices'});
+}
+
+function qbsNotifyEmail_() {
+  const v = String(qbsTabs_(qbsBook_()).setup.getRange(8, 2).getValue() || '').trim();
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? v : '';
 }
 
 /* ---------- The sync ---------- */
 
 function qbsSync_() {
   const lock = LockService.getScriptLock();
-  if (!lock.tryLock(30000)) return 'Another sync is already running.';
+  if (!lock.tryLock(30000)) return {summary: 'Another sync is already running.', invoices: [], problems: []};
   try {
     const book = qbsBook_();
     const tabs = qbsTabs_(book);
@@ -136,6 +187,7 @@ function qbsSync_() {
     // 3. One open invoice per customer.
     const recs = qbsReadInvoices_(tabs.invoices);
     let created = 0, updated = 0, lineCount = 0;
+    const report = [];
     for (const [qbId, group] of groups) {
       const rec = recs.get(qbId);
       let inv = null;
@@ -183,12 +235,13 @@ function qbsSync_() {
         book.getSheetByName('Ticket Log').getRange(t.row, 17).setValue(doc);
       });
       lineCount += touched.length;
+      report.push({customer: group.customer.DisplayName, doc: doc, id: String(saved.Id), total: Number(saved.TotalAmt || 0), lines: touched.length, isNew: !inv});
       qbsWriteInvoiceRec_(tabs.invoices, recs, qbId, [group.customer.DisplayName, qbId, doc, String(saved.Id), 'Open — not sent. Total $' + Number(saved.TotalAmt || 0).toFixed(2), false, new Date()]);
     }
 
     const summary = created + ' new invoice(s), ' + updated + ' updated, ' + lineCount + ' ticket line(s) added/changed. ' + (problems.length ? problems.length + ' item(s) to review below.' : 'Nothing to review.');
     qbsStatus_({status: 'Last sync OK.', summary: summary, problems: problems, ran: new Date()});
-    return summary;
+    return {summary: summary, invoices: report, problems: problems};
   } finally {
     lock.releaseLock();
   }
@@ -255,16 +308,23 @@ function qbsTabs_(book) {
     setup = book.insertSheet(QBS_TABS.setup);
     setup.getRange(1, 1, 8, 2).setValues([
       ['JWC  /  QUICKBOOKS', ''], ['', ''], ['Status', 'Not connected'], ['QuickBooks company', ''],
-      ['Last sync', ''], ['Result', ''], ['Bill tickets dated on or after', Utilities.formatDate(new Date(), QBS_TZ, 'yyyy-MM-dd')], ['', '']
+      ['Last sync', ''], ['Result', ''], ['Bill tickets dated on or after', Utilities.formatDate(new Date(), QBS_TZ, 'yyyy-MM-dd')], ['Email the nightly summary to', Session.getEffectiveUser().getEmail()]
     ]);
     setup.getRange(9, 1).setValue('To review');
     setup.getRange(1, 1, 60, 2).setBackground('#111418').setFontColor('#e5e7eb').setFontFamily('Arial');
     setup.getRange(1, 1).setFontSize(18).setFontWeight('bold');
     setup.getRange(3, 1, 7, 1).setFontWeight('bold');
+    setup.getRange(8, 2).setBackground('#dce1e8').setFontColor('#101216').setNote('Gets a short email after the 10 PM update. Leave blank for no emails.');
     setup.getRange(7, 2).setBackground('#dce1e8').setFontColor('#101216').setNote('Tickets dated before this are never sent to QuickBooks. Format: 2026-11-05');
     setup.setColumnWidth(1, 260);
     setup.setColumnWidth(2, 640);
     setup.setTabColor('#aeb6c1');
+  }
+  if (setup.getRange(8, 1).getValue() === '') {
+    // Added after first install: email row for the nightly summary.
+    setup.getRange(8, 1, 1, 2).setValues([['Email the nightly summary to', Session.getEffectiveUser().getEmail()]]);
+    setup.getRange(8, 1).setFontWeight('bold');
+    setup.getRange(8, 2).setBackground('#dce1e8').setFontColor('#101216').setNote('Gets a short email after the 10 PM update. Leave blank for no emails.');
   }
   const customers = make(QBS_TABS.customers, ['Customer on tickets', 'QuickBooks customer', 'QuickBooks ID'], [260, 260, 120]);
   const invoices = make(QBS_TABS.invoices, ['QuickBooks customer', 'QuickBooks ID', 'Open invoice #', 'Invoice ID', 'Status', 'Start a new invoice next sync', 'Last updated'], [240, 110, 120, 100, 340, 200, 160]);

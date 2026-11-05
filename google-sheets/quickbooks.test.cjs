@@ -95,6 +95,7 @@ function api(url, opts) {
   throw new Error('Unexpected call ' + opts.method + ' ' + path);
 }
 
+const mail = [];
 const props = new Map([['QB_REALM_ID', 'realm1'], ['QB_REFRESH', 'r'], ['QB_ACCESS', 'a'], ['QB_EXPIRES', String(Date.now() + 3e6)]]);
 const context = vm.createContext({
   SpreadsheetApp: {openById: () => book, newDataValidation: () => new Proxy({}, {get: (t, p) => () => new Proxy({}, {get: () => function () { return this; }})})},
@@ -103,6 +104,8 @@ const context = vm.createContext({
   UrlFetchApp: {fetch: api},
   Utilities: {formatDate: d => d.toISOString().slice(0, 10), base64Encode: s => Buffer.from(s).toString('base64')},
   ScriptApp: {getScriptId: () => 'script1'},
+  Session: {getEffectiveUser: () => ({getEmail: () => 'dispatch@jwchauling.com'})},
+  MailApp: {sendEmail: m => mail.push(m)},
   console,
 });
 vm.runInContext(fs.readFileSync(__dirname + '/QuickBooks.gs', 'utf8'), context);
@@ -193,4 +196,23 @@ addTicket({id: 'hhhh-8888-river', date: '2026-11-09', customer: 'River Valley En
 sync();
 assert.ok(byDoc('1006') && lineFor(byDoc('1006'), 'hhhh-8888-river'), 'Recovered with a new invoice');
 
-console.log('PASS: rolling invoice per customer, name matching, GST, skips old/test/NO BILL rows, $0 + flag for missing rates, idempotent reruns, sheet rate updates, QuickBooks edits and manual lines preserved, sent invoices frozen, deleted invoices recovered, nothing emailed.');
+// 8. Nightly run emails Jordan a summary only when something happened.
+assert.equal(setup().getRange(8, 2).getValue(), 'dispatch@jwchauling.com', 'Summary goes to the sheet owner by default');
+mail.length = 0;
+addTicket({id: 'iiii-9999-weaver', date: '2026-11-10', customer: 'Weaver Group Ltd', truck: '822', hours: 4, rate: 375});
+context.qbsNightlySync();
+assert.equal(mail.length, 1, 'Email after invoices changed');
+assert.equal(mail[0].to, 'dispatch@jwchauling.com');
+assert.match(mail[0].subject, /JWC invoices updated: 1 invoice, 1 ticket/);
+assert.match(mail[0].htmlBody, /Invoice #1005/);
+assert.match(mail[0].htmlBody, /Nothing was sent to customers/);
+assert.match(mail[0].htmlBody, /qbo\.intuit\.com\/app\/invoice\?txnId=/);
+context.qbsNightlySync();
+assert.equal(mail.length, 1, 'No email on a quiet night with the same review list');
+props.delete('QB_REFRESH');
+assert.throws(() => context.qbsNightlySync());
+assert.equal(mail.length, 2, 'Failure emails Jordan');
+assert.match(mail[1].subject, /FAILED/);
+props.set('QB_REFRESH', 'r');
+
+console.log('PASS: nightly summary email (on change / failure only). PASS: rolling invoice per customer, name matching, GST, skips old/test/NO BILL rows, $0 + flag for missing rates, idempotent reruns, sheet rate updates, QuickBooks edits and manual lines preserved, sent invoices frozen, deleted invoices recovered, nothing sent to customers.');
