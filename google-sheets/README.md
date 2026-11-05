@@ -1,6 +1,6 @@
 # Google Sheets ticket workflow
 
-This project prepares a live, authenticated version of the ticket app. The public GitHub Pages form still saves locally until the Google app is deployed; it cannot securely write to a private Google Sheet by itself.
+This project prepares a live, authenticated version of the ticket app. The website and /tickets/ entry point now open the supplied Google Apps Script deployment. Google sign-in and workbook edit access are required. This repository does not automatically deploy updated Apps Script code.
 
 ## One-time Google setup
 
@@ -35,3 +35,11 @@ The existing public ticket app's local save, reopen, update and CSV export were 
 ## Local checks
 
 Run `node google-sheets/test.cjs` for backend tests with a mocked Sheets adapter: validation, idempotency, formula escaping, and preservation of manual billing inputs. These tests do not evaluate formulas inside Google Sheets. The generated connected form was also browser-tested with a simulated Apps Script bridge for success/failure behavior; actual Google authorization and submissions remain unverified until deployment.
+
+## Current deployment
+
+The website navigation and /tickets/ route open the supplied Google deployment. The generated Tickets.html now has one Submit button and no history, print, new-ticket or export controls. It retains browser-local backups, retries failed submissions using the same ticket ID, and clears the form only after confirmed server success.
+
+For this existing Apps Script project, replace only the original Code.gs with JWC-App-Update.gs, save, then use Deploy → Manage deployments → edit the existing web app → New version → Deploy. Leave the separate design/simplification file alone. The form-only update does not rerun workbook setup, change spreadsheet contents, or change the deployment URL. Existing script properties remain in the project. Do not add the update as a second file alongside the original Code.gs, because it replaces the original runtime functions.
+
+Browser checks used a simulated Google bridge and mocked launch destination. Live Google authorization and a real submission into the workbook still require verification after updating the deployed version. The repository cannot update Google Apps Script deployments automatically.
