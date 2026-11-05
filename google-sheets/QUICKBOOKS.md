@@ -10,6 +10,7 @@
 - Unsent invoices still show as money owed (accounts receivable) in QuickBooks. QuickBooks Online has no true "draft".
 - **After an invoice is emailed, printed, paid (even partly) or voided, it is never changed again.** That customer's next tickets start a new invoice.
 - To start a fresh invoice for a customer without sending the current one, tick **Start a new invoice next sync** in the **QB Invoices** tab.
+- **Permits:** when Permits is ticked and a permit charge is in column S, it goes on as its own line ("Permits · date · job · truck", Services item, GST). If Permits is ticked with no charge, the ticket still goes on and the permit is listed under *To review*.
 - **Each line:** the truck's item (e.g. "Truck- 822"), quantity = billing quantity (hours), rate from the sheet, GST, the ticket date, and a description (date · job · truck · driver · Jeep/Booster/Tridem, then the work description, then a short `Ref JWC-…` tag used to find the line again). Leave the `Ref` tag in place.
 - **Rates:** enter them in the sheet (Rate column) or on the invoice in QuickBooks. A ticket with no rate goes on at $0 and is listed under *To review*. A rate typed in the sheet later updates the line, as long as the line was not edited in QuickBooks.
 - **Edits made in QuickBooks win.** If Jordan changes a line's quantity or rate, or adds his own lines (fuel surcharge, etc.), the sync leaves them alone and lists any conflicting sheet change under *To review*.

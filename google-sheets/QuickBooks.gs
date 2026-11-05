@@ -205,21 +205,26 @@ function qbsSync_() {
       }
       const lines = inv ? (inv.Line || []).filter(l => l.DetailType !== 'SubTotalLineDetail').map(qbsCleanLine_) : [];
       const touched = [];
+      const billables = [];
       for (const t of group.tickets) {
-        const want = qbsLine_(t, qb);
-        const prev = log.get(t.id);
+        billables.push({t, key: t.id, want: qbsLine_(t, qb)});
+        if (t.permits && t.permitRate > 0) billables.push({t, key: t.id + '-P', want: qbsPermitLine_(t, qb)});
+        else if (t.permits && !log.get(t.id + '-P') && !log.get(t.id)) problems.push('Permits ticked but no permit charge: ' + t.customer + ' · ' + t.date + ' · truck ' + t.truck + ' (enter it in the sheet, column S, or add it on the invoice).');
+      }
+      for (const {t, key, want} of billables) {
+        const prev = log.get(key);
         if (want.rate === 0 && !prev) problems.push('Needs a rate: ' + t.customer + ' · ' + t.date + ' · truck ' + t.truck + ' (added at $0 — enter the rate in the sheet or on the invoice).');
-        if (!prev) { lines.push(want.line); touched.push([t, want]); continue; }
+        if (!prev) { lines.push(want.line); touched.push([t, want, key]); continue; }
         if (!qbsDiffers_(prev, want)) continue;
         const where = '#' + (prev.doc || prev.invoiceId);
         if (!inv || prev.invoiceId !== String(inv.Id)) { problems.push('Ticket changed after invoice ' + where + ' was sent/closed — not updated: ' + t.customer + ' · ' + t.date + ' · truck ' + t.truck + '.'); continue; }
-        const line = lines.find(l => String(l.Description || '').includes(qbsTag_(t.id)));
+        const line = lines.find(l => qbsNorm_(l.Description).endsWith('Ref ' + want.tag));
         if (!line) { problems.push('Ticket was removed from invoice ' + where + ' in QuickBooks — not re-added: ' + t.customer + ' · ' + t.date + '.'); continue; }
         const d = line.SalesItemLineDetail || {};
         if (!qbsSame_(d.Qty, prev.qty) || !qbsSame_(d.UnitPrice, prev.rate)) { problems.push('Line edited in QuickBooks on invoice ' + where + ' — sheet change not applied: ' + t.customer + ' · ' + t.date + '.'); continue; }
         d.Qty = want.qty; d.UnitPrice = want.rate; line.Amount = want.amount;
         if (qbsNorm_(line.Description) === qbsNorm_(prev.desc)) line.Description = want.desc;
-        touched.push([t, want]);
+        touched.push([t, want, key]);
       }
       const taxDetail = qbsTaxDetail_(lines, qb);
       const taxStale = inv && Math.abs(Number((inv.TxnTaxDetail || {}).TotalTax || 0) - taxDetail.TotalTax) > 0.009;
@@ -237,8 +242,8 @@ function qbsSync_() {
         created++;
       }
       const doc = String(saved.DocNumber || saved.Id);
-      touched.forEach(([t, want]) => {
-        qbsWriteLog_(tabs.log, log, t.id, [t.id, String(saved.Id), doc, want.qty, want.rate, want.desc, new Date()]);
+      touched.forEach(([t, want, key]) => {
+        qbsWriteLog_(tabs.log, log, key, [key, String(saved.Id), doc, want.qty, want.rate, want.desc, new Date()]);
         book.getSheetByName('Ticket Log').getRange(t.row, 17).setValue(doc);
       });
       lineCount += touched.length;
@@ -261,11 +266,25 @@ function qbsLine_(t, qb) {
   const extras = [t.jeep && 'Jeep', t.booster && 'Booster', t.tridem && 'Tridem'].filter(Boolean);
   let head = [t.date, t.job && ('Job ' + t.job), 'Truck ' + t.truck, t.driver].filter(Boolean).join(' · ');
   if (extras.length) head += ' · ' + extras.join(', ');
-  const desc = (head + '\n' + String(t.work || '').trim()).slice(0, 3900) + '\nRef ' + qbsTag_(t.id);
+  const tag = qbsTag_(t.id);
+  const desc = (head + '\n' + String(t.work || '').trim()).slice(0, 3900) + '\nRef ' + tag;
   const item = qbsItemFor_(t.truck, qb.items);
-  return {qty, rate, amount, desc, line: {
+  return {qty, rate, amount, desc, tag, line: {
     DetailType: 'SalesItemLineDetail', Amount: amount, Description: desc,
     SalesItemLineDetail: {ItemRef: {value: String(item.Id)}, Qty: qty, UnitPrice: rate, ServiceDate: t.date, TaxCodeRef: {value: String(qb.gst)}}
+  }};
+}
+
+/** Permit charge: its own flat line (Services item) next to the ticket's truck line. */
+function qbsPermitLine_(t, qb) {
+  const rate = Math.round(Number(t.permitRate) * 100) / 100;
+  const tag = qbsTag_(t.id) + '-P';
+  const desc = 'Permits · ' + [t.date, t.job && ('Job ' + t.job), 'Truck ' + t.truck].filter(Boolean).join(' · ') + '\nRef ' + tag;
+  const services = qb.items.filter(i => i.Type === 'Service');
+  const item = services.find(i => /permit/i.test(i.Name)) || services.find(i => /^services$/i.test(i.Name)) || services[0];
+  return {qty: 1, rate, amount: rate, desc, tag, line: {
+    DetailType: 'SalesItemLineDetail', Amount: rate, Description: desc,
+    SalesItemLineDetail: {ItemRef: {value: String(item.Id)}, Qty: 1, UnitPrice: rate, ServiceDate: t.date, TaxCodeRef: {value: String(qb.gst)}}
   }};
 }
 
@@ -298,11 +317,13 @@ function qbsTickets_(book) {
   const last = sheet.getLastRow();
   if (last < 2) return [];
   const yes = v => v === true || String(v).toUpperCase() === 'TRUE';
-  return sheet.getRange(2, 1, last - 1, 17).getValues().map((r, i) => ({
+  const cols = Math.min(19, sheet.getMaxColumns());
+  return sheet.getRange(2, 1, last - 1, cols).getValues().map((r, i) => ({
     row: i + 2, id: String(r[0]).trim(), date: qbsDateStr_(r[2]), customer: String(r[3]).trim(), job: String(r[4]).trim(),
     truck: String(r[5]).trim(), driver: String(r[6]).trim(), jeep: yes(r[8]), booster: yes(r[9]), tridem: yes(r[10]),
     work: String(r[11]), qty: r[13] === '' ? Number(r[7]) : Number(r[13]), rate: r[14] === '' || r[14] === null ? null : Number(r[14]),
-    ref: String(r[16] === null || r[16] === undefined ? '' : r[16]).trim()
+    ref: String(r[16] === null || r[16] === undefined ? '' : r[16]).trim(),
+    permits: yes(r[17]), permitRate: r[18] === '' || r[18] === null || r[18] === undefined ? 0 : Number(r[18]) || 0
   }));
 }
 

@@ -11,6 +11,7 @@ function makeSheet() {
   const noop = new Proxy({}, {get: () => () => noop});
   const sheet = {
     cells,
+    getMaxColumns: () => 26,
     getLastRow() { let m = 0; for (const [k, v] of cells) if (v !== '' && v !== null && v !== undefined) m = Math.max(m, Number(k.split(':')[0])); return m; },
     getRange(r, c, nr = 1, nc = 1) {
       let proxy;
@@ -273,4 +274,31 @@ context.qbsNightlySync();
 assert.equal(JSON.parse(props.get('QB_PUSH_SUBS')).length, 0, 'Dead phone subscription removed');
 assert.equal(mail.length, 1, 'Falls back to email when no phone could be reached');
 
-console.log('PASS: phone alerts (owner code, ES256 verified by Node crypto, ping replaces email, dead subscriptions removed). PASS: nightly summary email (on change / failure only). PASS: rolling invoice per customer, name matching, GST, skips old/test/NO BILL rows, $0 + flag for missing rates, idempotent reruns, sheet rate updates, QuickBooks edits and manual lines preserved, sent invoices frozen, deleted invoices recovered, nothing sent to customers.');
+/* ---- Permits: their own line, added later too, rate changes follow, GST included ---- */
+pushStatus = 201;
+function weaverOpen() { return [...qb.invoices.values()].filter(i => i.CustomerRef.value === '100000001' && i.EmailStatus !== 'EmailSent').sort((a, b) => Number(b.Id) - Number(a.Id))[0]; }
+const rp = addTicket({id: 'llll-1212-weaver', date: '2026-11-13', customer: 'Weaver Group Ltd', truck: '822', hours: 2, rate: 375});
+ticketLog.getRange(rp, 18, 1, 2).setValues([[true, 85]]);
+context.qbsSync_();
+let pinv = weaverOpen();
+let permit = pinv.Line.filter(l => /Ref JWC-llll1212we-P$/.test(l.Description || ''));
+assert.equal(permit.length, 1, 'Permit charge gets its own line');
+assert.equal(permit[0].Amount, 85);
+assert.equal(permit[0].SalesItemLineDetail.ItemRef.value, '1', 'Permit uses the Services item');
+assert.equal(pinv.Line.filter(l => /Ref JWC-llll1212we$/.test(l.Description || '')).length, 1, 'Truck line still there once');
+const permTaxBase = pinv.Line.filter(l => l.SalesItemLineDetail).reduce((s, l) => s + l.Amount, 0);
+assert.equal(pinv.TxnTaxDetail.TotalTax, Math.round(permTaxBase * 5) / 100, 'GST includes the permit');
+context.qbsSync_();
+assert.equal(weaverOpen().Line.filter(l => /-P$/.test(l.Description || '')).length, 1, 'Rerun does not duplicate the permit');
+ticketLog.getRange(rp, 19).setValue(55);
+context.qbsSync_();
+assert.equal(weaverOpen().Line.find(l => /Ref JWC-llll1212we-P$/.test(l.Description || '')).Amount, 55, 'Permit rate change updates the line');
+const rq = addTicket({id: 'mmmm-1313-weaver', date: '2026-11-14', customer: 'Weaver Group Ltd', truck: '822', hours: 2, rate: 375});
+ticketLog.getRange(rq, 18).setValue(true);
+context.qbsSync_();
+assert.ok(String(ticketLog.getRange(rq, 17).getValue()), 'Ticket with permits ticked but no charge still invoiced');
+ticketLog.getRange(rq, 19).setValue(55);
+context.qbsSync_();
+assert.equal(weaverOpen().Line.filter(l => /Ref JWC-mmmm1313we-P$/.test(l.Description || '')).length, 1, 'Permit charge entered later is added');
+
+console.log('PASS: permits as their own line. PASS: phone alerts (owner code, ES256 verified by Node crypto, ping replaces email, dead subscriptions removed). PASS: nightly summary email (on change / failure only). PASS: rolling invoice per customer, name matching, GST, skips old/test/NO BILL rows, $0 + flag for missing rates, idempotent reruns, sheet rate updates, QuickBooks edits and manual lines preserved, sent invoices frozen, deleted invoices recovered, nothing sent to customers.');
