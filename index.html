@@ -27,7 +27,7 @@ header>a::after{content:"";position:absolute;top:37%;left:68%;width:18px;height:
 @keyframes chrome-glint{0%,77%,88%,100%{opacity:0;transform:scale(.4)}82%{opacity:.85;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){header>a::before,header>a::after{animation:none;opacity:0}.hero-media{animation:none;transform:none}}
 
-.bumper-shine{position:absolute;left:79%;top:74%;width:18%;height:10%;pointer-events:none;clip-path:polygon(0 22%,95% 0,100% 72%,4% 100%);background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.28) 50%,transparent 62%);background-size:350% 100%;mix-blend-mode:screen;opacity:0;animation:bumper-sweep 6s ease-in-out infinite}
+.bumper-shine{position:absolute;left:79%;top:74%;width:18%;height:10%;pointer-events:none;clip-path:polygon(0 22%,95% 0,100% 72%,4% 100%);background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.28) 50%,transparent 62%);background-size:350% 100%;mix-blend-mode:screen;opacity:0;animation:bumper-sweep 4s ease-in-out infinite}
 .roof-beacon{position:absolute;width:2.2%;height:4.4%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:radial-gradient(ellipse,rgba(255,231,144,.95) 0%,rgba(255,172,32,.6) 26%,rgba(255,139,0,.25) 48%,transparent 72%);mix-blend-mode:screen;opacity:0;animation:beacon-pulse 2.8s ease-in-out infinite}
 .beacon-left{left:60.3%;top:19.8%}.beacon-right{left:70.9%;top:21.6%;animation-delay:.3s}
 @keyframes bumper-sweep{0%,55%{background-position:150% 0;opacity:0}65%{opacity:.65}85%,100%{background-position:-50% 0;opacity:0}}
@@ -35,7 +35,7 @@ header>a::after{content:"";position:absolute;top:37%;left:68%;width:18px;height:
 @media(prefers-reduced-motion:reduce){.bumper-shine,.roof-beacon{animation:none;opacity:0}}
 
 
-.exhaust-shine{position:absolute;pointer-events:none;background:linear-gradient(165deg,transparent 38%,rgba(255,255,255,.38) 50%,transparent 62%);background-size:100% 350%;mix-blend-mode:screen;opacity:0;animation:exhaust-sweep 6s ease-in-out infinite;clip-path:polygon(8% 3%,55% 0,95% 3%,88% 100%,10% 98%)}
+.exhaust-shine{position:absolute;pointer-events:none;background:linear-gradient(165deg,transparent 38%,rgba(255,255,255,.38) 50%,transparent 62%);background-size:100% 350%;mix-blend-mode:screen;opacity:0;animation:exhaust-sweep 4s ease-in-out infinite;clip-path:polygon(8% 3%,55% 0,95% 3%,88% 100%,10% 98%)}
 .exhaust-near{left:51.8%;top:8.8%;width:1.9%;height:54.5%}.exhaust-far{left:71.2%;top:14.3%;width:1%;height:10%;animation-delay:.6s}
 @keyframes exhaust-sweep{0%,50%{background-position:0 -50%;opacity:0}65%{opacity:.8}90%,100%{background-position:0 150%;opacity:0}}
 @media(prefers-reduced-motion:reduce){.exhaust-shine{animation:none;opacity:0}}
