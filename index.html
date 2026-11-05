@@ -4,7 +4,7 @@
 <style>
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#08090b;color:#e9eaed;font:16px system-ui,Arial,sans-serif}a{color:inherit}
 header{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;padding:12px clamp(16px,4vw,70px);border-bottom:1px solid #3a3c41;background:#0a0b0e;gap:18px}
-header>a{grid-column:2;justify-self:center;display:block;width:220px;overflow:hidden;flex-shrink:0}header img{width:143%;max-width:none;display:block;margin-left:-43%;mix-blend-mode:screen}nav{grid-column:3;display:flex;gap:24px;align-items:center;justify-content:flex-end;flex-wrap:wrap}nav a{text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.08em}nav a:hover{color:white}
+header>a{position:relative;grid-column:2;justify-self:center;display:block;width:220px;overflow:hidden;flex-shrink:0;mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent),linear-gradient(to bottom,transparent,#000 20%,#000 76%,transparent);mask-composite:intersect}header img{width:143%;max-width:none;display:block;margin-left:-43%;mix-blend-mode:screen}nav{grid-column:3;display:flex;gap:24px;align-items:center;justify-content:flex-end;flex-wrap:wrap}nav a{text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.08em}nav a:hover{color:white}
 .hero{position:relative;min-height:78vh;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;text-align:left;padding:60px 20px 40px;background:linear-gradient(90deg,rgba(5,6,8,.82),rgba(5,6,8,.23) 70%),url("assets/jwc-hero.png") center/cover no-repeat,#11161c}
 .hero-photo{display:none}
 h1{font-size:clamp(22px,3.4vw,42px);letter-spacing:.22em;margin:0;font-weight:850}p{color:#c3c5c9;line-height:1.7}
@@ -19,6 +19,12 @@ h1{font-size:clamp(23px,5vw,36px);letter-spacing:.08em;line-height:1.25}
 .hero p{margin:14px 0 0}
 .info{padding:40px 20px}.info h1,.info h2{font-size:21px;letter-spacing:.08em}
 }
+
+header>a::before{content:"";position:absolute;inset:18% 0 20%;z-index:1;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.45) 49%,transparent 63%);transform:translateX(-140%);mix-blend-mode:screen;animation:chrome-shine 8s ease-in-out infinite}
+header>a::after{content:"";position:absolute;top:37%;left:68%;width:18px;height:18px;pointer-events:none;z-index:2;background:radial-gradient(ellipse 12% 50%,white,transparent),radial-gradient(ellipse 50% 12%,white,transparent);opacity:0;animation:chrome-glint 8s ease-in-out infinite}
+@keyframes chrome-shine{0%,65%{transform:translateX(-140%)}90%,100%{transform:translateX(140%)}}
+@keyframes chrome-glint{0%,77%,88%,100%{opacity:0;transform:scale(.4)}82%{opacity:.85;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){header>a::before,header>a::after{animation:none;opacity:0}}
 
 </style></head><body>
 <header><a href="./" aria-label="JWC Contracting Ltd. home"><img src="assets/jwc-logo.png" alt="JWC Contracting Ltd. official chrome logo"></a><nav><a href="tickets/">FIELD TICKETS</a><a href="#contact">CONTACT</a><a href="mailto:dispatch@jwchauling.com?subject=Safety%20inquiry">SAFETY</a></nav></header>
