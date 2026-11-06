@@ -34,4 +34,4 @@ Before final handoff, confirm one legitimate ticket and one maintenance entry re
 
 Backend checks: run `node google-sheets/<name>.test.cjs` for `maintenance`, `web-submission`, `staff-access`, `quickbooks`, `design`, plus `node google-sheets/test.cjs`. Browser checks use Playwright and Chromium: `app/test.cjs`, `intro.test.cjs`, `access.test.cjs`, `rates.test.cjs`, `forms.test.cjs`, `screen.test.cjs`. Run `python google-sheets/build.py` after changing bundled form/backend sources.
 
-Nightly checks are scheduled for November 6–19, 2026 at midnight MST. See [the check schedule and limits](docs/JWC-Nightly-Checks.md). Search health is included; rankings and private account state are not measurable by these checks.
+Nightly checks are scheduled for November 6–19, 2026 at midnight Alberta time (06:00 UTC). See [the check schedule and limits](docs/JWC-Nightly-Checks.md). Search health is included; rankings and private account state are not measurable by these checks.

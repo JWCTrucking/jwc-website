@@ -1,4 +1,4 @@
-// Simulates older Safari API gaps in Chromium; this is not a WebKit engine test.
+// Simulates older Safari API gaps in the selected engine (Chromium locally; both engines in CI).
 const {browserType,launchOptions}=require('./test-browser.cjs');
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 (async()=>{

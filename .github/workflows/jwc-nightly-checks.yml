@@ -2,8 +2,8 @@ name: JWC nightly checks
 
 on:
   schedule:
-    # Midnight Alberta time (MST) on Nov 6–19, 2026. Date guard prevents annual reruns.
-    - cron: '0 7 6-19 11 *'
+    # Midnight Alberta time (UTC−6 during this window) on Nov 6–19, 2026. Date guard prevents annual reruns.
+    - cron: '0 6 6-19 11 *'
   workflow_dispatch:
   push:
     branches: [main]
