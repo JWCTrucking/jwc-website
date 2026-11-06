@@ -1,12 +1,12 @@
-const CACHE = 'jwc-field-app-v19';
-const ASSETS = ['./','./index.html','./forms.html','./forms.js','./ids.js','./access-config.js?v=pin1','./staff-access.js','./alerts.html','./form-ui.css','./manifest.webmanifest','./jwc-icon-192.png','./jwc-icon-512.png','../assets/jwc-logo.png','../assets/jwc-logo-form.png','../assets/jwc-hero.png'];
+const CACHE = 'jwc-field-app-v20';
+const ASSETS = ['./','./index.html','./forms.html','./forms.js?v=safari2','./ids.js?v=safari2','./access-config.js?v=pin1','./staff-access.js?v=safari2','./alerts.html','./form-ui.css','./manifest.webmanifest','./jwc-icon-192.png','./jwc-icon-512.png','../assets/jwc-logo.png','../assets/jwc-logo-form.png','../assets/jwc-hero.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('jwc-field-app-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{
   const url=new URL(event.request.url);
   if(event.request.method!=='GET'||url.origin!==self.location.origin) return;
   if(!url.pathname.startsWith('/app/')&&!['/assets/jwc-logo.png','/assets/jwc-logo-form.png'].includes(url.pathname))return;
-  event.respondWith(fetch(event.request).then(response=>{
+  event.respondWith(fetch(event.request,{cache:'no-cache'}).then(response=>{
     if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));}
     return response;
   }).catch(async()=>{

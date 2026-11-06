@@ -23,12 +23,30 @@ function prompt(){if(activePrompt)return activePrompt;activePrompt=new Promise((
  dialog.innerHTML='<form class="staff-pin-form"><h2 id="staff-pin-title">Staff access</h2><p>Enter your four-digit PIN.</p><label for="staff-pin-input">Staff PIN</label><input id="staff-pin-input" name="staffPin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="off" required><p class="staff-pin-status" role="status" aria-live="polite"></p><button type="submit">Unlock</button><button type="button" class="staff-pin-cancel">Back</button></form>';
  document.body.append(dialog);const form=dialog.querySelector('form'),input=dialog.querySelector('input'),status=dialog.querySelector('[role=status]'),button=dialog.querySelector('[type=submit]');
  const previous=document.activeElement;
- function close(error){input.value='';dialog.close();dialog.remove();activePrompt=null;if(previous&&previous.isConnected)previous.focus({preventScroll:true});if(error)reject(error);else resolve(true);}
+ const nativeDialog=typeof dialog.showModal==='function';
+ let overlay;
+ function cancel(){close(Object.assign(new Error('Access cancelled.'),{code:'CANCELLED'}));}
+ function fallbackKeys(event){
+   if(event.key==='Escape'){event.preventDefault();cancel();return;}
+   if(event.key==='Tab'){
+     const controls=Array.from(dialog.querySelectorAll('input,button')).filter(el=>!el.disabled);
+     const first=controls[0],last=controls[controls.length-1];
+     if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+   }
+ }
+ function close(error){input.value='';if(nativeDialog)dialog.close();dialog.remove();if(overlay)overlay.remove();document.removeEventListener('keydown',fallbackKeys,true);activePrompt=null;if(previous&&previous.isConnected)previous.focus({preventScroll:true});if(error)reject(error);else resolve(true);}
  form.onsubmit=async event=>{event.preventDefault();if(button.disabled)return;button.disabled=true;button.textContent='Checking…';status.textContent='';const pin=input.value;input.value='';try{const result=await request('auth',{pin,deviceId:deviceId()});if(!result.session?.token||!result.session.expiresAt)throw new Error('The access update is not ready. Contact dispatch.');current=result.session;try{sessionStorage.setItem(storageKey,JSON.stringify(current));}catch{}close();}catch(error){status.textContent=error.message;input.focus();}finally{button.disabled=false;button.textContent='Unlock';}};
  dialog.querySelector('.staff-pin-cancel').onclick=()=>close(Object.assign(new Error('Access cancelled.'),{code:'CANCELLED'}));dialog.addEventListener('cancel',event=>{event.preventDefault();close(Object.assign(new Error('Access cancelled.'),{code:'CANCELLED'}));});
- dialog.showModal();input.focus();
+ if(nativeDialog)dialog.showModal();
+ else{
+   overlay=document.createElement('div');overlay.className='staff-pin-overlay';
+   dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('open','');
+   overlay.append(dialog);document.body.append(overlay);document.addEventListener('keydown',fallbackKeys,true);
+ }
+ input.focus();
 });return activePrompt;}
 async function requireAccess(){if(!enabled())return true;if(getToken()){try{await request('session',{});return true;}catch(error){forget();if(error.code==='CONNECTION_FAILED')throw error;}}return prompt();}
 window.JWCStaffAccess={enabled,getToken,require:requireAccess,forget};
-const style=document.createElement('style');style.textContent='.staff-pin-dialog{width:min(360px,calc(100vw - 32px));padding:26px;border:1px solid #778290;border-radius:16px;background:#11161d;color:#edf1f6;box-shadow:0 20px 80px #0009;font-family:system-ui}.staff-pin-dialog::backdrop{background:#05070be6;backdrop-filter:blur(8px)}.staff-pin-dialog h2{font-size:24px;margin:0 0 8px}.staff-pin-dialog p{font-size:14px;line-height:1.5;color:#bdc6d3}.staff-pin-dialog label{display:block;font-size:14px;margin:16px 0 8px}.staff-pin-dialog input{width:100%;min-height:60px;border:1px solid #8490a0;border-radius:8px;background:#202834;color:#fff;font:24px system-ui;text-align:center;letter-spacing:.5em}.staff-pin-dialog button{display:block;width:100%;min-height:48px;margin-top:14px;border:0;border-radius:8px;font:700 16px system-ui;background:linear-gradient(120deg,#9da7b5,#f4f6f9,#9da7b5);color:#11161d}.staff-pin-dialog .staff-pin-cancel{background:transparent;color:#c8d0dc}.staff-pin-dialog .staff-pin-status{margin:12px 0 0;min-height:0;color:#f0c8c8}.staff-pin-dialog input:focus-visible,.staff-pin-dialog button:focus-visible{outline:2px solid white;outline-offset:3px}';document.head.append(style);
+const style=document.createElement('style');style.textContent='.staff-pin-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:#05070be6;padding:16px}.staff-pin-overlay .staff-pin-dialog{display:block;position:relative;margin:0;max-height:calc(100vh - 32px);overflow-y:auto}.staff-pin-dialog{width:min(360px,calc(100vw - 32px));padding:26px;border:1px solid #778290;border-radius:16px;background:#11161d;color:#edf1f6;box-shadow:0 20px 80px #0009;font-family:system-ui}.staff-pin-dialog::backdrop{background:#05070be6;backdrop-filter:blur(8px)}.staff-pin-dialog h2{font-size:24px;margin:0 0 8px}.staff-pin-dialog p{font-size:14px;line-height:1.5;color:#bdc6d3}.staff-pin-dialog label{display:block;font-size:14px;margin:16px 0 8px}.staff-pin-dialog input{width:100%;min-height:60px;border:1px solid #8490a0;border-radius:8px;background:#202834;color:#fff;font:24px system-ui;text-align:center;letter-spacing:.5em}.staff-pin-dialog button{display:block;width:100%;min-height:48px;margin-top:14px;border:0;border-radius:8px;font:700 16px system-ui;background:linear-gradient(120deg,#9da7b5,#f4f6f9,#9da7b5);color:#11161d}.staff-pin-dialog .staff-pin-cancel{background:transparent;color:#c8d0dc}.staff-pin-dialog .staff-pin-status{margin:12px 0 0;min-height:0;color:#f0c8c8}.staff-pin-dialog input:focus-visible,.staff-pin-dialog button:focus-visible{outline:2px solid white;outline-offset:3px}';document.head.append(style);
 })();

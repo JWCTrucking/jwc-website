@@ -25,3 +25,9 @@ The prepared native-style form screen has an app header, back arrow, grouped pho
 Installed desktop browsers that support Window Controls Overlay can use the branded app title strip; standalone is the fallback. The document title is JWC Field App. A normal browser tab still displays browser controls, and mobile/system security UI cannot be hidden by site CSS. The installed title-bar appearance needs device-specific verification.
 
 Ticket forms now optionally accept Hourly rate, a Permits checkbox and a separate Permit rate. Hourly rate maps to Ticket Log column O; permit flag/rate map to appended R/S, preserving Q. Deploy the regenerated Google runtime for these fields. Until the receiver confirms support, submissions using the new options retain their drafts and show an incomplete-confirmation message instead of reporting full success.
+
+## Safari compatibility
+
+Secure request IDs fall back to `crypto.getRandomValues` if `crypto.randomUUID` is unavailable. The PIN dialog has an accessible modal fallback, and the intro supports the older media-query listener API. Fields stay disabled until initialization and PIN validation finish. Versioned scripts and revalidated app fetches reduce stale-code problems after updates.
+
+`node app/safari-compat.test.cjs` simulates these missing browser APIs in Chromium and checks phone/laptop PIN entry, cancel/reopen, keyboard focus, and confirmed ticket/maintenance submissions with mocked Google responses. It does not establish compatibility with an actual Safari/WebKit installation or prove the live Google deployment.
