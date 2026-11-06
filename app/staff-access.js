@@ -5,9 +5,9 @@ const storageKey='jwc-staff-session';let current;
 try{current=JSON.parse(sessionStorage.getItem(storageKey)||'null');}catch{}
 function getToken(){return current&&current.expiresAt>Date.now()?current.token:null;}
 function forget(){current=null;try{sessionStorage.removeItem(storageKey);}catch{}}
-function deviceId(){try{let id=localStorage.getItem('jwc-staff-device');if(!id){id=crypto.randomUUID();localStorage.setItem('jwc-staff-device',id);}return id;}catch{return crypto.randomUUID();}}
+function deviceId(){try{let id=localStorage.getItem('jwc-staff-device');if(!id){id=window.JWCUuid();localStorage.setItem('jwc-staff-device',id);}return id;}catch{return window.JWCUuid();}}
 function request(kind,payload){return new Promise((resolve,reject)=>{
- const requestId=crypto.randomUUID(),id=crypto.randomUUID();const frame=document.createElement('iframe');frame.hidden=true;frame.name='jwc-access-'+requestId;frame.title='Staff access confirmation';
+ const requestId=window.JWCUuid(),id=window.JWCUuid();const frame=document.createElement('iframe');frame.hidden=true;frame.name='jwc-access-'+requestId;frame.title='Staff access confirmation';
  const form=document.createElement('form');form.hidden=true;form.method='POST';form.action=endpoint;form.target=frame.name;
  const input=document.createElement('input');input.name='packet';input.type='hidden';input.value=JSON.stringify({kind,requestId,origin:location.origin,sessionToken:getToken(),payload:{...payload,id}});form.append(input);
  const topWindow=window.top;

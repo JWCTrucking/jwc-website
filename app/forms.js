@@ -13,7 +13,7 @@ document.querySelectorAll('[data-view]').forEach(a=>a.onclick=e=>{e.preventDefau
 function payload(kind){if(kind==='maintenance')return {date:$('service-date').value,truck:$('service-truck').value.trim(),service:$('service-type').value,performedBy:$('service-person').value.trim(),odometer:$('service-odometer').value,work:$('service-work').value.trim()};const data={};ticketFields.forEach(k=>data[k]=$(k).value);['jeep','booster','tridem','permits'].forEach(k=>data[k]=$(k).checked);return data;}
 function sendPacket(kind,data){return new Promise((resolve,reject)=>{
   const messageWindow=window.top;
-  const requestId=crypto.randomUUID();const frame=document.createElement('iframe');frame.name='jwc-response-'+requestId;frame.hidden=true;frame.title='Submission confirmation';
+  const requestId=window.JWCUuid();const frame=document.createElement('iframe');frame.name='jwc-response-'+requestId;frame.hidden=true;frame.title='Submission confirmation';
   const form=document.createElement('form');form.hidden=true;form.method='POST';form.action=SUBMISSION_URL;form.target=frame.name;
   const input=document.createElement('input');input.type='hidden';input.name='packet';input.value=JSON.stringify({kind,payload:data,requestId,origin:location.origin,sessionToken:window.JWCStaffAccess?.getToken()});form.append(input);
   const timer=setTimeout(()=>finish(new Error('No confirmation received. Your entry is saved here. Check your connection, then tap Submit to retry.')),45000);
@@ -26,7 +26,7 @@ function sendPacket(kind,data){return new Promise((resolve,reject)=>{
 function controls(kind){return kind==='ticket'?{form:$('form'),status:$('status'),date:$('date')}:{form:$('maintenance-form'),status:$('maintenance-status'),date:$('service-date')};}
 async function submit(kind){
   const view=controls(kind),button=view.form.querySelector('[type=submit]');if(button.disabled)return;
-  const data={...payload(kind),id:pending[kind]||crypto.randomUUID()};
+  const data={...payload(kind),id:pending[kind]||window.JWCUuid()};
   if(kind==='maintenance'&&(!data.truck||!data.work||!data.performedBy)){view.status.textContent='Enter the truck, work done, and who did it.';return;}
   if(kind==='ticket'&&!data.driver.trim()){view.status.textContent='Enter the driver name.';return;}
   try{localStorage.setItem('jwc-form-'+kind+'-draft',JSON.stringify(data));pending[kind]=data.id;}catch{view.status.textContent='Could not keep a backup on this device. Your form has not been cleared.';return;}

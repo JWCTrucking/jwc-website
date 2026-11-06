@@ -32,6 +32,7 @@ button:disabled{opacity:.6}.status{margin:14px 0 0;font-size:14px;line-height:1.
 </section>
 <p class="small">The owner code is on the <b>QuickBooks</b> tab of the JWC Master Tickets sheet. On iPhone, open this from the JWC app on your Home Screen.</p>
 </main>
+<script src="ids.js"></script>
 <script>
 /* Public half of the sheet's alert key (QuickBooks tab → "Alerts public key"). Not a secret. */
 const VAPID_PUBLIC_KEY='BL1WtUrgF8IxuizoOV1HXQtJgY55sR59be9Udf6QnP93CKRmz02XUWruIURKlW6MSYHpDTpgbHqWU19-rjyDjhA';
@@ -40,7 +41,7 @@ const $=id=>document.getElementById(id);
 function say(text,err){$('status').textContent=text;$('status').className='status'+(err?' err':'');}
 function keyBytes(b64){const s=atob((b64+'='.repeat((4-b64.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(s,c=>c.charCodeAt(0));}
 function send(payload){return new Promise((resolve,reject)=>{
-  const requestId=crypto.randomUUID(),frame=document.createElement('iframe'),form=document.createElement('form'),input=document.createElement('input');
+  const requestId=window.JWCUuid(),frame=document.createElement('iframe'),form=document.createElement('form'),input=document.createElement('input');
   frame.name='jwc-alerts-'+requestId;frame.hidden=true;form.hidden=true;form.method='POST';form.action=SUBMISSION_URL;form.target=frame.name;
   input.type='hidden';input.name='packet';input.value=JSON.stringify({kind:'push',payload,requestId,origin:location.origin});form.append(input);
   const timer=setTimeout(()=>done(new Error('No answer. Check your connection and try again.')),45000);
@@ -59,7 +60,7 @@ $('go').onclick=async()=>{
     await navigator.serviceWorker.register('./sw.js');
     const reg=await navigator.serviceWorker.ready;
     const sub=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyBytes(VAPID_PUBLIC_KEY)});
-    await send({id:crypto.randomUUID(),code,subscription:{endpoint:sub.endpoint}});
+    await send({id:window.JWCUuid(),code,subscription:{endpoint:sub.endpoint}});
     say('Alerts are on for this phone. You should get a test ping now.');
   }catch(e){say(e.message||'Something went wrong. Try again.',true);}
   finally{$('go').disabled=false;}
