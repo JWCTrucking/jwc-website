@@ -20,7 +20,7 @@ permissions:
 
 concurrency:
   group: jwc-checks-${{ github.ref }}-${{ github.event_name }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
   window:
@@ -46,6 +46,8 @@ jobs:
       - run: python3 scripts/seo-check.py
 
   browsers:
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble@sha256:dcc5531e97840b9b5e794f2814476b21571c5124a3fca2267d73041f56e7580e
     needs: window
     if: needs.window.outputs.run == 'true'
     runs-on: ubuntu-24.04
@@ -64,7 +66,6 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
-      - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: npm run test:browser
       - uses: actions/upload-artifact@v4
         if: always()
