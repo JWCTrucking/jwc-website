@@ -1,0 +1,87 @@
+name: JWC nightly checks
+
+on:
+  schedule:
+    # Midnight Alberta time (MST) on Nov 6–19, 2026. Date guard prevents annual reruns.
+    - cron: '0 7 6-19 11 *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/jwc-nightly-checks.yml'
+      - 'scripts/**'
+      - 'app/**'
+      - 'google-sheets/**'
+      - 'index.html'
+      - 'package*.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jwc-checks-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: false
+
+jobs:
+  window:
+    runs-on: ubuntu-24.04
+    outputs:
+      run: ${{ steps.window.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: window
+        run: node scripts/nightly-window.cjs
+
+  backend:
+    needs: window
+    if: needs.window.outputs.run == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run test:backend
+      - run: python3 scripts/seo-check.py
+
+  browsers:
+    needs: window
+    if: needs.window.outputs.run == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    env:
+      JWC_BROWSER: ${{ matrix.browser }}
+      JWC_PREVIEW_DIR: ${{ github.workspace }}/.test-results
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: app-previews-${{ matrix.browser }}
+          path: .test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  production:
+    needs: window
+    if: needs.window.outputs.run == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/live-check.py

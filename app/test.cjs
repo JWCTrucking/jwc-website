@@ -1,5 +1,5 @@
 const {allowTestStaff}=require('./test-access.cjs');
-const {chromium}=require('playwright'),http=require('http'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
+const {browserType,launchOptions}=require('./test-browser.cjs'),http=require('http'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
 (async()=>{
  const root=path.resolve(__dirname,'..');
  const server=http.createServer((q,r)=>{
@@ -11,7 +11,7 @@ const {chromium}=require('playwright'),http=require('http'),fs=require('fs'),pat
  });
  await new Promise(resolve=>server.listen(8001,resolve));let browser;
  try{
-  browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+  browser=await browserType.launch(launchOptions);
   for(const width of [320,390,768,1440]){
    const context=await browser.newContext({viewport:{width,height:900}});
    await allowTestStaff(context);const p=await context.newPage();await p.goto('http://127.0.0.1:8001/app/');
@@ -29,7 +29,7 @@ const {chromium}=require('playwright'),http=require('http'),fs=require('fs'),pat
     await frame.getByRole('link',{name:'Back to app',exact:true}).click();
     await p.waitForFunction(()=>document.getElementById('form-screen').hidden);
    }
-   await p.screenshot({path:`/workspace/previews/app-welcome-${width}.png`,fullPage:true});
+   await p.screenshot({path:path.join(process.env.JWC_PREVIEW_DIR||path.join(root,'.test-results'),`app-welcome-${width}.png`),fullPage:true});
    await p.goto('http://127.0.0.1:8001/tickets/');await p.waitForURL('http://127.0.0.1:8001/app/');
    await p.evaluate(()=>navigator.serviceWorker.ready);await p.reload();
    await context.setOffline(true);await p.reload();await p.waitForFunction(()=>!document.documentElement.classList.contains('intro-running'));

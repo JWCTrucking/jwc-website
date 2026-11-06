@@ -33,3 +33,5 @@ Audit fixes protect accounting/setup functions from anonymous or staff RPC calls
 Before final handoff, confirm one legitimate ticket and one maintenance entry reach the live Sheet, and review that ticket's invoice after a sync. Do not send an invoice just to test it. Confirm production HTTPS and that the saved phone icon opens the current app. This workspace cannot inspect authenticated Google or QuickBooks accounts.
 
 Backend checks: run `node google-sheets/<name>.test.cjs` for `maintenance`, `web-submission`, `staff-access`, `quickbooks`, `design`, plus `node google-sheets/test.cjs`. Browser checks use Playwright and Chromium: `app/test.cjs`, `intro.test.cjs`, `access.test.cjs`, `rates.test.cjs`, `forms.test.cjs`, `screen.test.cjs`. Run `python google-sheets/build.py` after changing bundled form/backend sources.
+
+Nightly checks are scheduled for November 6–19, 2026 at midnight MST. See [the check schedule and limits](docs/JWC-Nightly-Checks.md). Search health is included; rankings and private account state are not measurable by these checks.

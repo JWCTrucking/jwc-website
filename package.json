@@ -1,0 +1,11 @@
+{
+  "name": "jwc-website-checks",
+  "private": true,
+  "scripts": {
+    "test": "node scripts/run-checks.cjs",
+    "test:backend": "node scripts/run-checks.cjs backend",
+    "test:browser": "node scripts/run-checks.cjs browser",
+    "test:live": "python3 scripts/live-check.py"
+  },
+  "devDependencies": {"playwright": "1.62.1"}
+}

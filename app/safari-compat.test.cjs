@@ -1,5 +1,5 @@
 // Simulates older Safari API gaps in Chromium; this is not a WebKit engine test.
-const {chromium}=require('playwright');
+const {browserType,launchOptions}=require('./test-browser.cjs');
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 (async()=>{
  const root=path.resolve(__dirname,'..');
@@ -9,7 +9,7 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
  });
  await new Promise(resolve=>server.listen(8008,resolve));let browser;
  try{
-  browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+  browser=await browserType.launch(launchOptions);
   for(const width of [390,1440]){
    const context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});
    await context.addInitScript(()=>{
