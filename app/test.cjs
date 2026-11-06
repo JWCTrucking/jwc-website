@@ -1,9 +1,10 @@
-const {allowTestStaff}=require('./test-access.cjs');
+const {allowTestStaff,STAFF_STUB}=require('./test-access.cjs');
 const {browserType,launchOptions}=require('./test-browser.cjs'),http=require('http'),fs=require('fs'),path=require('path'),assert=require('assert/strict');
 (async()=>{
  const root=path.resolve(__dirname,'..');
  const server=http.createServer((q,r)=>{
   let file=path.join(root,q.url.split('?')[0]);if(file.endsWith('/'))file+='index.html';
+  if(file.endsWith('staff-access.js')){r.setHeader('Content-Type','text/javascript');r.end(STAFF_STUB);return;}
   fs.readFile(file,(err,data)=>{
    r.statusCode=err?404:200;
    r.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.png')?'image/png':file.endsWith('.webmanifest')?'application/manifest+json':'text/html');r.end(err?'Missing':data);
@@ -25,7 +26,7 @@ const {browserType,launchOptions}=require('./test-browser.cjs'),http=require('ht
     assert.equal(new URL(p.url()).origin,'http://127.0.0.1:8001');
     assert(await p.locator('#form-frame').evaluate(f=>new URL(f.src).origin===location.origin));
     assert(await frame.locator('body').evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-    assert.equal(await frame.locator('button[type=submit]:visible').count(),1);
+    await frame.locator('main:not([inert])').waitFor();assert.equal(await frame.locator('button[type=submit]:visible').count(),1);
     await frame.getByRole('link',{name:'Back to app',exact:true}).click();
     await p.waitForFunction(()=>document.getElementById('form-screen').hidden);
    }

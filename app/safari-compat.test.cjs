@@ -11,7 +11,7 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
  try{
   browser=await browserType.launch(launchOptions);
   for(const width of [390,1440]){
-   const context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});
+   const context=await browser.newContext({serviceWorkers:'block',viewport:{width,height:900},reducedMotion:'reduce'});
    await context.addInitScript(()=>{
     Object.defineProperty(Crypto.prototype,'randomUUID',{value:undefined,configurable:true});
     Object.defineProperty(HTMLDialogElement.prototype,'showModal',{value:undefined,configurable:true});
