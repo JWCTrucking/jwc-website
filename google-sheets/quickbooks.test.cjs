@@ -122,7 +122,7 @@ const context = vm.createContext({
     newBlob: str => ({getBytes: () => toSigned(Buffer.from(str, 'utf8'))}),
   },
   ScriptApp: {getScriptId: () => 'script1'},
-  Session: {getEffectiveUser: () => ({getEmail: () => 'dispatch@jwchauling.com'})},
+  Session: {getActiveUser: () => ({getEmail: () => 'dispatch@jwchauling.com'}), getEffectiveUser: () => ({getEmail: () => 'dispatch@jwchauling.com'})},
   MailApp: {sendEmail: m => mail.push(m)},
   console,
 });
@@ -304,3 +304,30 @@ assert.equal(weaverOpen().Line.filter(l => /Ref JWC-mmmm1313we-P$/.test(l.Descri
 /* ---- Never leaves a blank Script Property (Google's settings page won't save with one) ---- */
 for (const [k, v] of props) if (v === '') assert.fail('Blank script property: ' + k);
 console.log('PASS: permits as their own line. PASS: phone alerts (owner code, ES256 verified by Node crypto, ping replaces email, dead subscriptions removed). PASS: nightly summary email (on change / failure only). PASS: rolling invoice per customer, name matching, GST, skips old/test/NO BILL rows, $0 + flag for missing rates, idempotent reruns, sheet rate updates, QuickBooks edits and manual lines preserved, sent invoices frozen, deleted invoices recovered, nothing sent to customers.');
+
+// Permit removal must surface for review without silently changing accounting history.
+ticketLog.getRange(rp, 18).setValue(false);
+const removedPermit = context.qbsSync_();
+assert.ok(removedPermit.problems.some(p => p.includes('Permit charge removed in Sheets')));
+assert.equal(weaverOpen().Line.find(l => /Ref JWC-llll1212we-P$/.test(l.Description || '')).Amount, 55);
+// Late permits on a closed invoice require review instead of silently creating a new charge.
+const lateRow = addTicket({id: 'late-permit-closed', date: '2026-11-14', customer: 'Weaver Group Ltd', truck: '822', hours: 1, rate: 375});
+context.qbsSync_();
+weaverOpen().EmailStatus = 'EmailSent';
+ticketLog.getRange(lateRow, 18, 1, 2).setValues([[true, 90]]);
+const beforeLate = qb.posts;
+const lateReport = context.qbsSync_();
+assert.ok(lateReport.problems.some(p => p.includes('Permit added after truck invoice')));
+assert.equal(qb.posts, beforeLate, 'No new invoice for a late permit on a closed truck invoice');
+// Anonymous and non-owner RPC callers cannot run accounting or setup operations.
+context.Session.getActiveUser = () => ({getEmail: () => ''});
+context.ScriptApp.getProjectTriggers = () => [{getUniqueId: () => 'installed-secret', getHandlerFunction: () => 'qbsLiveTick'}];
+for (const name of ['qbsSetup', 'qbsConnect', 'qbsDisconnect', 'qbsSyncNow', 'qbsNightlySync', 'qbsSetupPush', 'qbsShowPhoneAlerts', 'qbsSwitchToLiveWindow', 'qbsTestModeToday', 'qbsLiveTick', 'qbsTestTick', 'qbsAuthCallback', 'qbsOnOpen']) {
+  assert.throws(() => context[name](), /Owner access required/, name);
+}
+assert.throws(() => context.qbsLiveTick({triggerUid: 'forged'}), /Owner access required/);
+assert.doesNotThrow(() => context.qbsRequireOwner_({triggerUid: 'installed-secret'}, 'qbsLiveTick'));
+assert.throws(() => context.qbsRequireOwner_({triggerUid: 'installed-secret'}, 'qbsNightlySync'), /Owner access required/);
+context.Session.getActiveUser = () => ({getEmail: () => 'employee@jwchauling.com'});
+assert.throws(() => context.qbsDisconnect(), /Owner access required/);
+console.log('PASS: owner-only accounting RPCs, verified scheduled triggers, and removed permit charge review.');

@@ -26,7 +26,19 @@ const QBS_NOTE = 'Rolling invoice updated nightly from JWC field tickets. Not se
 
 /* ---------- One-time setup and menu ---------- */
 
+/** Public Apps Script RPCs must never inherit the owner's accounting access. */
+function qbsRequireOwner_(event, handler) {
+  const owner = String(Session.getEffectiveUser().getEmail() || '').toLowerCase();
+  const active = String(Session.getActiveUser().getEmail() || '').toLowerCase();
+  if (owner && active === owner) return;
+  // Time-driven triggers run without an active browser user. Verify the installed trigger.
+  if (event && event.triggerUid && handler && ScriptApp.getProjectTriggers().some(t =>
+      String(t.getUniqueId()) === String(event.triggerUid) && t.getHandlerFunction() === handler)) return;
+  throw new Error('Owner access required. Open QuickBooks controls from the owner Google account.');
+}
+
 function qbsSetup() {
+  qbsRequireOwner_();
   const book = qbsBook_();
   qbsTabs_(book);
   const handlers = ScriptApp.getProjectTriggers().map(t => t.getHandlerFunction());
@@ -37,7 +49,8 @@ function qbsSetup() {
   return qbsRedirectUri_();
 }
 
-function qbsOnOpen() {
+function qbsOnOpen(event) {
+  qbsRequireOwner_(event, 'qbsOnOpen');
   SpreadsheetApp.getUi().createMenu('QuickBooks')
     .addItem('Connect QuickBooks', 'qbsConnect')
     .addItem('Sync invoices now', 'qbsSyncNow')
@@ -50,6 +63,7 @@ function qbsOnOpen() {
 }
 
 function qbsShowRedirect() {
+  qbsRequireOwner_();
   const url = qbsRedirectUri_();
   SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(
     '<p style="font:14px Arial">Paste this into the Intuit app under <b>Redirect URIs</b>:</p>' +
@@ -58,6 +72,7 @@ function qbsShowRedirect() {
 }
 
 function qbsConnect() {
+  qbsRequireOwner_();
   const p = PropertiesService.getScriptProperties();
   if (!p.getProperty('QB_CLIENT_ID') || !p.getProperty('QB_CLIENT_SECRET')) {
     throw new Error('Add QB_CLIENT_ID and QB_CLIENT_SECRET under Project Settings → Script Properties first.');
@@ -74,6 +89,7 @@ function qbsConnect() {
 }
 
 function qbsAuthCallback(request) {
+  qbsRequireOwner_();
   const q = (request && request.parameter) || {};
   if (q.error || !q.code || !q.realmId) return HtmlService.createHtmlOutput('<p style="font:16px Arial">QuickBooks was not connected: ' + qbsEsc_(q.error || 'missing details') + '</p>');
   qbsSaveTokens_(qbsTokenRequest_({grant_type: 'authorization_code', code: q.code, redirect_uri: qbsRedirectUri_()}));
@@ -87,19 +103,26 @@ function qbsAuthCallback(request) {
 }
 
 function qbsDisconnect() {
+  qbsRequireOwner_();
   const p = PropertiesService.getScriptProperties();
   ['QB_ACCESS', 'QB_REFRESH', 'QB_EXPIRES', 'QB_REALM_ID', 'QB_COMPANY'].forEach(k => p.deleteProperty(k));
   qbsStatus_({status: 'Disconnected. Nightly sync will do nothing until QuickBooks is connected again.', company: ''});
 }
 
 function qbsSyncNow() {
+  qbsRequireOwner_();
   let report;
   try { report = qbsSync_(); }
   catch (e) { qbsStatus_({status: 'Last sync FAILED: ' + e.message}); throw e; }
   SpreadsheetApp.getUi().alert(report.summary);
 }
 
-function qbsNightlySync() {
+function qbsNightlySync(event) {
+  qbsRequireOwner_(event, 'qbsNightlySync');
+  return qbsRunAndNotify_();
+}
+
+function qbsRunAndNotify_() {
   let report;
   try { report = qbsSync_(); }
   catch (e) {
@@ -208,14 +231,23 @@ function qbsSync_() {
       const touched = [];
       const billables = [];
       for (const t of group.tickets) {
+        const oldPermit = log.get(t.id + '-P');
+        if (oldPermit && (!t.permits || !(t.permitRate > 0))) problems.push('Permit charge removed in Sheets — existing invoice charge kept for owner review: ' + t.customer + ' · ' + t.date + ' · truck ' + t.truck + '.');
         billables.push({t, key: t.id, want: qbsLine_(t, qb)});
         if (t.permits && t.permitRate > 0) billables.push({t, key: t.id + '-P', want: qbsPermitLine_(t, qb)});
-        else if (t.permits && !log.get(t.id + '-P') && !log.get(t.id)) problems.push('Permits ticked but no permit charge: ' + t.customer + ' · ' + t.date + ' · truck ' + t.truck + ' (enter it in the sheet, column S, or add it on the invoice).');
+        else if (t.permits && !log.get(t.id + '-P')) problems.push('Permits ticked but no permit charge: ' + t.customer + ' · ' + t.date + ' · truck ' + t.truck + ' (enter it in the sheet, column S, or add it on the invoice).');
       }
       for (const {t, key, want} of billables) {
         const prev = log.get(key);
         if (want.rate === 0 && !prev) problems.push('Needs a rate: ' + t.customer + ' · ' + t.date + ' · truck ' + t.truck + ' (added at $0 — enter the rate in the sheet or on the invoice).');
-        if (!prev) { lines.push(want.line); touched.push([t, want, key]); continue; }
+        if (!prev) {
+          const truckHistory = key !== t.id && log.get(t.id);
+          if (truckHistory && (!inv || truckHistory.invoiceId !== String(inv.Id))) {
+            problems.push('Permit added after truck invoice was sent/closed — not billed automatically: ' + t.customer + ' · ' + t.date + ' · truck ' + t.truck + '. Review it in QuickBooks.');
+            continue;
+          }
+          lines.push(want.line); touched.push([t, want, key]); continue;
+        }
         if (!qbsDiffers_(prev, want)) continue;
         const where = '#' + (prev.doc || prev.invoiceId);
         if (!inv || prev.invoiceId !== String(inv.Id)) { problems.push('Ticket changed after invoice ' + where + ' was sent/closed — not updated: ' + t.customer + ' · ' + t.date + ' · truck ' + t.truck + '.'); continue; }
@@ -553,6 +585,7 @@ const QBS_PUSH_HOSTS = /^https:\/\/(fcm\.googleapis\.com|updates\.push\.services
 
 /** Run once (menu: Set up phone alerts). Creates this sheet's own alert keys and owner code. */
 function qbsSetupPush() {
+  qbsRequireOwner_();
   const p = PropertiesService.getScriptProperties();
   if (!p.getProperty('QB_VAPID_D')) {
     const seed = Utilities.getUuid() + Utilities.getUuid() + Date.now() + Math.random();
@@ -569,6 +602,7 @@ function qbsSetupPush() {
 }
 
 function qbsShowPhoneAlerts() {
+  qbsRequireOwner_();
   qbsSetupPush();
   const code = PropertiesService.getScriptProperties().getProperty('QB_NOTIFY_CODE');
   SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput(
@@ -721,17 +755,24 @@ function qbsUseLiveWindow_() {
 
 /** Run once from the editor to switch an existing install to the 5 PM–midnight live window. */
 function qbsSwitchToLiveWindow() {
+  qbsRequireOwner_();
   qbsUseLiveWindow_();
   qbsStatus_({status: 'Connected. Invoices update live from 5 PM to midnight (Alberta time).'});
 }
 
 function qbsTestModeToday() {
+  qbsRequireOwner_();
   qbsUseLiveWindow_();
   PropertiesService.getScriptProperties().setProperty('QB_TEST_DAY', Utilities.formatDate(new Date(), QBS_TZ, 'yyyy-MM-dd'));
   qbsStatus_({status: 'TEST MODE: live all day today. From tomorrow, live 5 PM to midnight.'});
 }
 
-function qbsLiveTick() {
+function qbsLiveTick(event) {
+  qbsRequireOwner_(event, 'qbsLiveTick');
+  return qbsLiveTick_();
+}
+
+function qbsLiveTick_() {
   const p = PropertiesService.getScriptProperties();
   if (!p.getProperty('QB_REFRESH')) return; // not connected
   const now = new Date();
@@ -744,7 +785,7 @@ function qbsLiveTick() {
   }
   if (hour < QBS_LIVE_FROM_HOUR && testDay !== today) return;
   try {
-    qbsNightlySync();
+    qbsRunAndNotify_();
   } catch (e) {
     // qbsNightlySync already logged it; email the failure only once per day.
     if (p.getProperty('QB_LAST_FAIL_DAY') !== today) p.setProperty('QB_LAST_FAIL_DAY', today);
@@ -752,4 +793,4 @@ function qbsLiveTick() {
 }
 
 /* Kept so an old trigger left over from earlier installs still does something sensible. */
-function qbsTestTick() { qbsLiveTick(); }
+function qbsTestTick(event) { qbsRequireOwner_(event, 'qbsTestTick'); qbsLiveTick_(); }
