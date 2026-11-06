@@ -11,6 +11,7 @@ on:
       - '.github/workflows/jwc-nightly-checks.yml'
       - 'scripts/**'
       - 'app/**'
+      - 'fleet/**'
       - 'google-sheets/**'
       - 'index.html'
       - 'package*.json'
