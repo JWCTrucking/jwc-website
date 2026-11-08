@@ -1,0 +1,30 @@
+{
+  "expected_pages": 31,
+  "section_pages": {
+    "1. Management policy": 4,
+    "2. Scope, legal basis and operating limits": 5,
+    "3. Responsibilities and worker participation": 6,
+    "4. Hazard assessment, FLHAs and toolbox meetings": 8,
+    "5. Driver qualifications, training and competence": 9,
+    "6. Fitness for duty, impairment and conduct": 10,
+    "7. Alberta provincial hours of service": 11,
+    "8. Daily logs, local time records and HOS monitoring": 12,
+    "9. Trip planning, dispatch and safe driving": 13,
+    "10. Weights, dimensions, permits and escorts": 14,
+    "11. General cargo securement and inspections": 15,
+    "12. Pipe, casing, tubing and long steel procedure": 16,
+    "13. Heavy equipment and skid loading procedure": 17,
+    "14. Winching, rigging and recovery limits": 18,
+    "15. Site hazards, PPE and exposure controls": 19,
+    "16. Backing, parking, coupling and roadside work": 20,
+    "17. Daily trip inspection and defect control": 21,
+    "18. Preventive maintenance, CVIP and return to service": 22,
+    "19. Emergency preparedness, first aid and working alone": 23,
+    "20. Incident reporting, investigation and return to work": 24,
+    "21. Violence, harassment, public interaction and welfare": 25,
+    "22. Contractors, environmental protection and change control": 26,
+    "23. Records, monitoring and program review": 27,
+    "24. Operating registers and field checklists": 29,
+    "25. Source register and review basis": 30
+  }
+}

@@ -1,15 +1,33 @@
 ![JWC Contracting Ltd.](https://www.jwchauling.com/assets/jwc-logo-form.png)
 
 # JWC Contracting Ltd.
-# Safety & Carrier Compliance Program
+# Health & Safety Manual
 
-**Alberta oilfield trucking, pipe transport and heavy equipment hauling**  
-**Document:** JWC-HSE-001 · **Revision:** 1.0 · **Effective:** November 7, 2026  
-**Program owner:** Jordan Cowan, Chief Executive Officer  
-**Operating area:** Alberta only · **Cargo scope:** Non-dangerous oilfield materials and equipment  
+**Safety & Carrier Compliance Program**
+
+**Alberta oilfield trucking, pipe transport and heavy equipment hauling**
+**Document:** JWC-HSE-001 · **Revision:** 1.1 · **Effective:** November 7, 2026
+**Program owner:** Jordan Cowan, Chief Executive Officer
+**Operating area:** Alberta only · **Cargo scope:** Non-dangerous oilfield materials and equipment
 **Business location:** Peace River, Alberta · **Contact:** 780-625-6837 · dispatch@jwchauling.com
 
-## 1. Management policy and approval
+## Safety mission statement
+
+Our mission is to deliver oilfield pipe, equipment and heavy loads safely, reliably and responsibly throughout Alberta. We will protect our people, our customers, the public and the environment through sound planning, competent workers, properly maintained equipment and clear communication.
+
+Safety starts before a truck moves. We will identify hazards, respect driving and working limits, secure every load correctly and stop when conditions are unsafe. No schedule, delivery or production demand is more important than sending every person home safely.
+
+As Chief Executive Officer, I am accountable for providing the leadership, resources and support needed to put this program into practice. Every worker is expected and empowered to take part, report concerns and stop unsafe work without fear of retaliation. We will learn from our work, correct problems and continually improve.
+
+**Approved and issued by:**
+
+![Jordan Cowan — cursive approval signature](Jordan-Cowan-signature.png)
+
+**Jordan Cowan**
+Chief Executive Officer, JWC Contracting Ltd.
+November 7, 2026
+
+## 1. Management policy
 
 JWC Contracting Ltd. will plan and perform its work to protect workers, customers, the public, property and the environment. No delivery, production target or customer instruction takes priority over safe and lawful work. JWC will provide competent supervision, suitable equipment, required training and resources to identify hazards, control risk and maintain safe vehicles.
 
@@ -17,11 +35,7 @@ Every person has authority to stop unsafe work. Workers may raise concerns, part
 
 This program establishes JWC's company rules and procedures. Where legislation, an operating permit, manufacturer instructions or an applicable site requirement is more protective, that requirement applies. A conflict must be resolved by management before work proceeds; a client cannot waive the law. This document does not represent a regulator-issued approval, COR/SECOR certificate, or a substitute for implementing the required controls and records.
 
-**Approved and issued by:**  
-**Jordan Cowan**  
-**Chief Executive Officer, JWC Contracting Ltd.**  
-**Typed approval signature: Jordan Cowan**  
-**November 7, 2026**
+
 
 ## 2. Scope, legal basis and operating limits
 
