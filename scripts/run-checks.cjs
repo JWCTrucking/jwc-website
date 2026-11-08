@@ -1,6 +1,6 @@
 const {spawnSync}=require('node:child_process');
-const backend=['google-sheets/test.cjs',...['pretrip','maintenance','web-submission','staff-access','quickbooks','design'].map(n=>'google-sheets/'+n+'.test.cjs'),'app/ids.test.cjs','scripts/nightly-window.test.cjs'];
-const browser=['app/test.cjs',...['pretrip','intro','access','forms','rates','screen','safari-compat'].map(n=>'app/'+n+'.test.cjs')];
+const backend=['google-sheets/test.cjs',...['safety','pretrip','maintenance','web-submission','staff-access','quickbooks','design'].map(n=>'google-sheets/'+n+'.test.cjs'),'app/ids.test.cjs','scripts/nightly-window.test.cjs'];
+const browser=['app/test.cjs',...['safety','pretrip','intro','access','forms','rates','screen','safari-compat'].map(n=>'app/'+n+'.test.cjs')];
 const group=process.argv[2]||'all';
 if(!['backend','browser','all'].includes(group))throw new Error('Unknown check group: '+group);
 const tests=group==='all'?[...backend,...browser]:group==='backend'?backend:browser;

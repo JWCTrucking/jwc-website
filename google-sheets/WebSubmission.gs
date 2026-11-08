@@ -4,8 +4,9 @@ function doPost(e) {
   let packet={},origin=allowed[0],result={type:'JWC_SUBMISSION_RESULT',ok:false};
   try {
     const raw=e && e.parameter && e.parameter.packet;
-    if(typeof raw!=='string' || raw.length>50000)throw new Error('Invalid submission.');
+    if(typeof raw!=='string' || raw.length>250000)throw new Error('Invalid submission.');
     packet=JSON.parse(raw);
+    if(packet.kind!=='safety'&&raw.length>50000)throw new Error('Invalid submission.');
     if(!allowed.includes(packet.origin))throw new Error('Invalid app origin.');
     origin=packet.origin;
     if(!/^[A-Za-z0-9_-]{1,100}$/.test(String(packet.requestId||'')))throw new Error('Invalid request.');
@@ -14,6 +15,7 @@ function doPost(e) {
     if(packet.kind==='auth'){result.session=authenticateStaff_(packet.payload);result.staffPinAccess=true;}
     else if(packet.kind==='session'){requireStaffSession_(packet.sessionToken);result.staffPinAccess=true;}
     else if(packet.kind==='ticket'){saveTickets([packet.payload],packet.sessionToken);result.ticketRatesPermits=true;result.staffPinAccess=true;}
+    else if(packet.kind==='safety')Object.assign(result,saveSafety(packet.payload,packet.sessionToken));
     else if(packet.kind==='pretrip')Object.assign(result,savePretrip(packet.payload,packet.sessionToken));
     else if(packet.kind==='maintenance'){saveMaintenance(packet.payload,packet.sessionToken);result.staffPinAccess=true;}
     else if(packet.kind==='push')qbsSavePushSubscription_(packet.payload);

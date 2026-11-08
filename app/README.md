@@ -35,3 +35,7 @@ Secure request IDs fall back to `crypto.getRandomValues` if `crypto.randomUUID` 
 ## Alberta truck & trailer pre-trip
 
 The third home-screen action opens a PIN-protected daily inspection with separate tractor/trailer results for all 23 Schedule 1 systems, defect notes, inspection details and electronic signatures. It saves drafts and only reports success after the updated Google backend confirms PDF generation and email submission to `dispach@jwchauling.com`. The driver can download the same PDF for the vehicle. See [backend deployment and Alberta requirements](../google-sheets/PRETRIP.md); backend deployment and Google authorization are required before live PDF email works.
+
+## Basic safety forms
+
+**FLHA · Hazard Assessment** and **Toolbox Meeting** open short PIN-protected safety records with named crew and finger/mouse signatures. Both send signed PDFs to `dispach@jwchauling.com` after the latest Google backend is deployed. See [safety form deployment](../google-sheets/SAFETY.md). These are basic small-operator records; site-specific requirements still apply.
