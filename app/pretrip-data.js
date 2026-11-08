@@ -1,0 +1,2 @@
+/* NSC Standard 13 Part 2 Schedule 1 categories. */
+const JWC_PRETRIP_ITEMS=["Air brake system", "Cab", "Cargo securement", "Coupling devices", "Dangerous goods", "Driver controls", "Driver seat", "Electric brake system", "Emergency equipment and safety devices", "Exhaust system", "Frame and cargo body", "Fuel system", "General", "Glass and mirrors", "Heater/defroster", "Horn", "Hydraulic brake system", "Lamps and reflectors", "Steering", "Suspension system", "Tires", "Wheels, hubs and fasteners", "Windshield wiper/washer"];

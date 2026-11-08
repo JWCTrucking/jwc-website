@@ -92,6 +92,7 @@ try {
 <div class="actions">
 <a class="action" href="https://script.google.com/macros/s/AKfycbxow0m-w5V3EntTTTdUQ6K2gQnUlPUaMWI_8qb3CrqeOZL5PcTqMjMsvWgmULSg-qDQqg/exec?view=tickets"><span>Field Tickets</span><span aria-hidden="true">→</span></a>
 <a class="action secondary" href="https://script.google.com/macros/s/AKfycbxow0m-w5V3EntTTTdUQ6K2gQnUlPUaMWI_8qb3CrqeOZL5PcTqMjMsvWgmULSg-qDQqg/exec?view=maintenance"><span>Maintenance</span><span aria-hidden="true">→</span></a>
+<a class="action secondary" href="pretrip.html?view=pretrip"><span>Truck &amp; Trailer Pre-trip</span><span aria-hidden="true">→</span></a>
 </div><p class="connection-note">Cell service or Wi-Fi required to submit.</p>
 </section>
 <details class="install"><summary>Save this app to your home screen</summary><p><strong>iPhone:</strong> Open this page in Safari. Tap Share, then Add to Home Screen, then Add.</p><p><strong>Android:</strong> Open this page in Chrome. Tap the three dots, then Add to Home screen or Install app.</p><p>Name it <strong>JWC Field App</strong>.</p></details>
@@ -148,25 +149,25 @@ const formFrame=document.getElementById('form-frame');
 let lastFormLink;
 function openForm(view,link){
   lastFormLink=link||document.querySelector('.action');
-  formFrame.title=view==='maintenance'?'Maintenance':'Field ticket';
-  formFrame.src='forms.html?view='+encodeURIComponent(view);
+  formFrame.title=view==='pretrip'?'Alberta pre-trip':view==='maintenance'?'Maintenance':'Field ticket';
+  formFrame.src=view==='pretrip'?'pretrip.html':'forms.html?view='+encodeURIComponent(view);
   formScreen.hidden=false;document.body.classList.add('form-open');shell.inert=true;
   history.pushState({jwcForm:view},'', '#'+view);
 }
 function closeForm(){
   formScreen.hidden=true;document.body.classList.remove('form-open');shell.inert=false;
   formFrame.src='about:blank';
-  if(location.hash==='#tickets'||location.hash==='#maintenance')history.replaceState(null,'',location.pathname+location.search);
+  if(location.hash==='#tickets'||location.hash==='#maintenance'||location.hash==='#pretrip')history.replaceState(null,'',location.pathname+location.search);
   if(lastFormLink)lastFormLink.focus({preventScroll:true});
 }
 window.addEventListener('message',event=>{if(event.origin===location.origin&&event.source===formFrame.contentWindow&&event.data?.type==='JWC_CLOSE_FORM')closeForm();});
 window.addEventListener('popstate',()=>{if(!formScreen.hidden)closeForm();});
 document.querySelectorAll('.action').forEach(link=>link.addEventListener('click',event=>{
   if(!navigator.onLine){event.preventDefault();offlineMessage.hidden=false;offlineMessage.scrollIntoView({block:'center',behavior:'smooth'});return;}
-  if(ownedFormsReady){event.preventDefault();JWCStaffAccess.require().then(()=>openForm(new URL(link.href).searchParams.get('view')==='maintenance'?'maintenance':'tickets',link)).catch(()=>{});}
+  if(ownedFormsReady){event.preventDefault();JWCStaffAccess.require().then(()=>openForm(new URL(link.href).searchParams.get('view')||'tickets',link)).catch(()=>{});}
 }));
 const requestedForm=new URLSearchParams(location.search).get('open');
-if(requestedForm==='tickets'||requestedForm==='maintenance'){const waitForIntro=setInterval(()=>{if(!document.documentElement.classList.contains('intro-running')){clearInterval(waitForIntro);JWCStaffAccess.require().then(()=>openForm(requestedForm)).catch(()=>{});}},100);}
+if(requestedForm==='tickets'||requestedForm==='maintenance'||requestedForm==='pretrip'){const waitForIntro=setInterval(()=>{if(!document.documentElement.classList.contains('intro-running')){clearInterval(waitForIntro);JWCStaffAccess.require().then(()=>openForm(requestedForm)).catch(()=>{});}},100);}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
 </script>
 </body></html>

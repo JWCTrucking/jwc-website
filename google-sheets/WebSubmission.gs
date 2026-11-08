@@ -14,6 +14,7 @@ function doPost(e) {
     if(packet.kind==='auth'){result.session=authenticateStaff_(packet.payload);result.staffPinAccess=true;}
     else if(packet.kind==='session'){requireStaffSession_(packet.sessionToken);result.staffPinAccess=true;}
     else if(packet.kind==='ticket'){saveTickets([packet.payload],packet.sessionToken);result.ticketRatesPermits=true;result.staffPinAccess=true;}
+    else if(packet.kind==='pretrip')Object.assign(result,savePretrip(packet.payload,packet.sessionToken));
     else if(packet.kind==='maintenance'){saveMaintenance(packet.payload,packet.sessionToken);result.staffPinAccess=true;}
     else if(packet.kind==='push')qbsSavePushSubscription_(packet.payload);
     else throw new Error('Invalid submission type.');
