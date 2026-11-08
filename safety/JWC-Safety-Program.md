@@ -6,7 +6,7 @@
 **Safety & Carrier Compliance Program**
 
 **Alberta oilfield trucking, pipe transport and heavy equipment hauling**
-**Document:** JWC-HSE-001 · **Revision:** 1.2 · **Effective:** November 7, 2019
+**Document:** JWC-HSE-001 · **Revision:** 3.7 · **Effective:** November 7, 2019
 **Program owner:** Jordan Cowan, Chief Executive Officer
 **Operating area:** Alberta only · **Cargo scope:** Non-dangerous oilfield materials and equipment
 **Business location:** Peace River, Alberta · **Contact:** 780-625-6837 · dispatch@jwchauling.com

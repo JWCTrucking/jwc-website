@@ -12,7 +12,7 @@ font=ImageFont.truetype(str(r/'safety/fonts/Allura-Regular.ttf'),150)
 b=font.getbbox('Jordan Cowan');im=Image.new('RGBA',(b[2]-b[0]+44,b[3]-b[1]+38),(255,255,255,0));ImageDraw.Draw(im).text((22-b[0],18-b[1]),'Jordan Cowan',font=font,fill=(20,28,40,255));im.save(out/'Jordan-Cowan-signature.png')
 # Freshly typeset opaque print image: no alpha mask for PDF viewers to misrender.
 print_image=Image.new('RGB',im.size,'white');print_image.paste(im,mask=im.getchannel('A'));print_image.save(out/'Jordan-Cowan-signature-print.jpg',quality=98,subsampling=0)
-p=out/'JWC-Safety-Program.md';s=p.read_text().replace('# Safety & Carrier Compliance Program','# Health & Safety Manual\n\n**Safety & Carrier Compliance Program**').replace('**Revision:** 1.0','**Revision:** 1.1')
+p=out/'JWC-Safety-Program.md';s=p.read_text().replace('# Safety & Carrier Compliance Program','# Health & Safety Manual\n\n**Safety & Carrier Compliance Program**')
 old='''**Approved and issued by:**  
 **Jordan Cowan**  
 **Chief Executive Officer, JWC Contracting Ltd.**  
@@ -45,14 +45,14 @@ normal=doc.styles['Normal'];normal.font.name='Arial';normal.font.size=Pt(10.5);n
 for name,size,color in [('Title',30,'101A28'),('Heading 1',20,'14253C'),('Heading 2',15,'243950')]:
  st=doc.styles[name];st.font.name='Arial';st.font.size=Pt(size);st.font.color.rgb=RGBColor.from_string(color);st.paragraph_format.space_before=Pt(0);st.paragraph_format.space_after=Pt(15);st.paragraph_format.keep_with_next=True
 header=sec.header.paragraphs[0];header.text='JWC CONTRACTING LTD.   |   HEALTH & SAFETY MANUAL';header.style=doc.styles['Normal'];header.runs[0].font.size=Pt(8);header.runs[0].font.color.rgb=RGBColor.from_string('5E6B7A')
-footer=sec.footer.paragraphs[0];footer.alignment=WD_ALIGN_PARAGRAPH.RIGHT;run=footer.add_run('JWC-HSE-001 · Rev 1.2    |    ');run.font.name='Arial';run.font.size=Pt(8)
+footer=sec.footer.paragraphs[0];footer.alignment=WD_ALIGN_PARAGRAPH.RIGHT;run=footer.add_run('JWC-HSE-001 · Rev 3.7    |    ');run.font.name='Arial';run.font.size=Pt(8)
 for instr,after in [('PAGE',' of '),('NUMPAGES','')]:
  fld=OxmlElement('w:fldSimple');fld.set(qn('w:instr'),instr);footer._p.append(fld);footer.add_run(after).font.size=Pt(8)
 # Cover page.
 pic=doc.add_paragraph();pic.paragraph_format.line_spacing=1.0;pic.alignment=WD_ALIGN_PARAGRAPH.CENTER;pic.paragraph_format.space_before=Pt(38);pic.paragraph_format.space_after=Pt(65);pic.add_run().add_picture(str(r/'assets/jwc-logo-form.png'),width=Inches(5.6))
 for text,size,bold,after in [('JWC CONTRACTING LTD.',15,True,20),('HEALTH & SAFETY\nMANUAL',30,True,24),('Oilfield Trucking · Pipe Transport\nHeavy Equipment Hauling',16,False,45)]:
  p1=doc.add_paragraph();p1.alignment=WD_ALIGN_PARAGRAPH.CENTER;p1.paragraph_format.space_after=Pt(after);p1.paragraph_format.line_spacing=1.15;run=p1.add_run(text);run.font.name='Arial';run.font.size=Pt(size);run.bold=bold;run.font.color.rgb=RGBColor.from_string('14253C')
-for text in ['ALBERTA OPERATIONS','JWC-HSE-001  |  Revision 1.2','Effective November 7, 2019','Peace River, Alberta  |  780-625-6837','dispatch@jwchauling.com']:
+for text in ['ALBERTA OPERATIONS','JWC-HSE-001  |  Revision 3.7','Effective November 7, 2019','Peace River, Alberta  |  780-625-6837','dispatch@jwchauling.com']:
  p1=doc.add_paragraph(text);p1.alignment=WD_ALIGN_PARAGRAPH.CENTER;p1.paragraph_format.space_after=Pt(5)
 doc.add_page_break()
 # Dedicated CEO mission page.
@@ -111,6 +111,6 @@ for heading,paras,cont in pages:
   p1=doc.add_paragraph();p1.paragraph_format.widow_control=True
   if kind!='normal':p1.paragraph_format.left_indent=Inches(.18);p1.paragraph_format.first_line_indent=Inches(-.12);text=('• ' if kind=='bullet' else '')+text
   add_runs(p1,text)
-doc.core_properties.title='JWC Contracting Ltd. — Health & Safety Manual';doc.core_properties.author='JWC Contracting Ltd.';doc.core_properties.subject='Alberta oilfield trucking and heavy hauling safety and carrier compliance';doc.core_properties.version='1.2';doc.save(out/'JWC-Safety-Program.docx')
+doc.core_properties.title='JWC Contracting Ltd. — Health & Safety Manual';doc.core_properties.author='JWC Contracting Ltd.';doc.core_properties.subject='Alberta oilfield trucking and heavy hauling safety and carrier compliance';doc.core_properties.version='3.7';doc.save(out/'JWC-Safety-Program.docx')
 (out/'handbook-pagination.json').write_text(json.dumps({'expected_pages':len(pages)+3,'section_pages':starts},indent=2))
 print('DOCX authored:',len(pages)+3,'planned pages; cover 1, mission 2, contents 3, body 4 onward')
