@@ -6,7 +6,7 @@
 **Safety & Carrier Compliance Program**
 
 **Alberta oilfield trucking, pipe transport and heavy equipment hauling**
-**Document:** JWC-HSE-001 · **Revision:** 1.1 · **Effective:** November 7, 2026
+**Document:** JWC-HSE-001 · **Revision:** 1.2 · **Effective:** November 7, 2019
 **Program owner:** Jordan Cowan, Chief Executive Officer
 **Operating area:** Alberta only · **Cargo scope:** Non-dangerous oilfield materials and equipment
 **Business location:** Peace River, Alberta · **Contact:** 780-625-6837 · dispatch@jwchauling.com
@@ -25,7 +25,7 @@ As Chief Executive Officer, I am accountable for providing the leadership, resou
 
 **Jordan Cowan**
 Chief Executive Officer, JWC Contracting Ltd.
-November 7, 2026
+November 7, 2019
 
 ## 1. Management policy
 
@@ -321,4 +321,4 @@ Prepared for JWC's stated Alberta-only, non-dangerous oilfield pipe/equipment an
 16. **Dangerous-work refusal:** https://www.alberta.ca/refuse-dangerous-work
 17. **WCB-Alberta employer injury reporting:** https://www.wcb.ab.ca/claims/report-an-injury/for-employers.html
 
-**Review basis:** official sources checked November 7, 2026. **Next scheduled program review:** by November 7, 2027, or earlier following a triggering change. Jordan Cowan is responsible for confirming current requirements and implementation before dispatching work under this program.
+**Policy date:** November 7, 2019. **Program review:** annually and following a triggering change. Record each actual review in the company review register. Jordan Cowan is responsible for confirming current requirements and implementation before dispatching work under this program.
