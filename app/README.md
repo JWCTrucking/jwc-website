@@ -31,3 +31,7 @@ Ticket forms now optionally accept Hourly rate, a Permits checkbox and a separat
 Secure request IDs fall back to `crypto.getRandomValues` if `crypto.randomUUID` is unavailable. The PIN dialog has an accessible modal fallback, and the intro supports the older media-query listener API. Fields stay disabled until initialization and PIN validation finish. Versioned scripts and revalidated app fetches reduce stale-code problems after updates.
 
 `node app/safari-compat.test.cjs` simulates these missing browser APIs in the selected engine (Chromium by default, Chromium and WebKit in CI) and checks phone/laptop PIN entry, cancel/reopen, keyboard focus, and confirmed ticket/maintenance submissions with mocked Google responses. It does not establish compatibility with Jordan's exact Safari installation or prove live submissions to the Google deployment.
+
+## Alberta truck & trailer pre-trip
+
+The third home-screen action opens a PIN-protected daily inspection with separate tractor/trailer results for all 23 Schedule 1 systems, defect notes, inspection details and electronic signatures. It saves drafts and only reports success after the updated Google backend confirms PDF generation and email submission to `dispach@jwchauling.com`. The driver can download the same PDF for the vehicle. See [backend deployment and Alberta requirements](../google-sheets/PRETRIP.md); backend deployment and Google authorization are required before live PDF email works.

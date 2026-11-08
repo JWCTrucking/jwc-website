@@ -36,6 +36,8 @@ import json
 code = (root / 'google-sheets' / 'Code.gs').read_text()
 code += '\n' + (root / 'google-sheets' / 'StaffAccess.gs').read_text()
 code += '\n' + (root / 'google-sheets' / 'Maintenance.gs').read_text()
+code += '\n' + (root / 'app' / 'pretrip-data.js').read_text()
+code += '\n' + (root / 'google-sheets' / 'Pretrip.gs').read_text()
 code += '\n' + (root / 'google-sheets' / 'WebSubmission.gs').read_text()
 code += '\n' + (root / 'google-sheets' / 'Design.gs').read_text()
 code = code.replace("HtmlService.createHtmlOutputFromFile('Tickets')", 'HtmlService.createHtmlOutput(JWC_TICKET_HTML)')
@@ -48,6 +50,8 @@ runtime = (root / 'google-sheets' / 'Code.gs').read_text()
 runtime = runtime[runtime.index('function doGet('):]
 runtime += '\n' + (root / 'google-sheets' / 'StaffAccess.gs').read_text()
 runtime += '\n' + (root / 'google-sheets' / 'Maintenance.gs').read_text()
+runtime += '\n' + (root / 'app' / 'pretrip-data.js').read_text()
+runtime += '\n' + (root / 'google-sheets' / 'Pretrip.gs').read_text()
 runtime += '\n' + (root / 'google-sheets' / 'WebSubmission.gs').read_text()
 runtime = runtime.replace("HtmlService.createHtmlOutputFromFile('Tickets')", 'HtmlService.createHtmlOutput(JWC_TICKET_HTML)')
 update = root / 'google-sheets' / 'JWC-App-Update.gs'
