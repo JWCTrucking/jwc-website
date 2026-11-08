@@ -80,6 +80,10 @@ function repairTruckTotals_(sheet) {
 }
 function saveTickets(tickets,staffSession) {
   requireStaffSession_(staffSession);
+  return saveTickets_(tickets);
+}
+/** Public app submission core. Private underscore prevents direct google.script.run calls. */
+function saveTickets_(tickets) {
   if (!Array.isArray(tickets) || !tickets.length || tickets.length>200) throw new Error('Send between 1 and 200 tickets.');
   tickets.forEach(validateTicket);
   const id=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
@@ -184,6 +188,10 @@ function validateMaintenance_(entry) {
 }
 function saveMaintenance(entry,staffSession) {
   requireStaffSession_(staffSession);
+  return saveMaintenance_(entry);
+}
+/** Public app submission core. Private underscore prevents direct google.script.run calls. */
+function saveMaintenance_(entry) {
   validateMaintenance_(entry);
   const lock=LockService.getScriptLock(); lock.waitLock(30000);
   try {
@@ -234,8 +242,13 @@ function pretripPdf_(entry){
  doc.saveAndClose();return DriveApp.getFileById(doc.getId()).getAs(MimeType.PDF).setName('JWC-pretrip-'+entry.date+'-'+entry.id+'.pdf');
  }finally{DriveApp.getFileById(doc.getId()).setTrashed(true);}
 }
-function savePretrip(entry,session){
- requireStaffSession_(session);validatePretrip_(entry);
+function savePretrip(entry,session) {
+  requireStaffSession_(session);
+  return savePretrip_(entry);
+}
+/** Public app submission core. Private underscore prevents direct google.script.run calls. */
+function savePretrip_(entry) {
+ validatePretrip_(entry);
  const lock=LockService.getScriptLock();lock.waitLock(30000);
  try{
  const bookId=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');if(!bookId)pretripError_('Inspection workbook is not configured.');
@@ -305,8 +318,13 @@ function safetyPdf_(entry){
  doc.saveAndClose();return DriveApp.getFileById(doc.getId()).getAs(MimeType.PDF).setName('JWC-'+entry.kind+'-'+entry.date+'-'+entry.id+'.pdf');
  }finally{DriveApp.getFileById(doc.getId()).setTrashed(true);}
 }
-function saveSafety(entry,session){
- requireStaffSession_(session);validateSafety_(entry);
+function saveSafety(entry,session) {
+  requireStaffSession_(session);
+  return saveSafety_(entry);
+}
+/** Public app submission core. Private underscore prevents direct google.script.run calls. */
+function saveSafety_(entry) {
+ validateSafety_(entry);
  const lock=LockService.getScriptLock();lock.waitLock(30000);
  try{
  const bookId=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');if(!bookId)safetyError_('The JWC workbook is not configured.');
@@ -350,10 +368,10 @@ function doPost(e) {
     result.id=packet.payload && packet.payload.id;
     if(packet.kind==='auth'){result.session=authenticateStaff_(packet.payload);result.staffPinAccess=true;}
     else if(packet.kind==='session'){requireStaffSession_(packet.sessionToken);result.staffPinAccess=true;}
-    else if(packet.kind==='ticket'){saveTickets([packet.payload],packet.sessionToken);result.ticketRatesPermits=true;result.staffPinAccess=true;}
-    else if(packet.kind==='safety')Object.assign(result,saveSafety(packet.payload,packet.sessionToken));
-    else if(packet.kind==='pretrip')Object.assign(result,savePretrip(packet.payload,packet.sessionToken));
-    else if(packet.kind==='maintenance'){saveMaintenance(packet.payload,packet.sessionToken);result.staffPinAccess=true;}
+    else if(packet.kind==='ticket'){saveTickets_([packet.payload]);result.ticketRatesPermits=true;result.staffPinAccess=true;}
+    else if(packet.kind==='safety')Object.assign(result,saveSafety_(packet.payload));
+    else if(packet.kind==='pretrip')Object.assign(result,savePretrip_(packet.payload));
+    else if(packet.kind==='maintenance'){saveMaintenance_(packet.payload);result.staffPinAccess=true;}
     else if(packet.kind==='push')qbsSavePushSubscription_(packet.payload);
     else throw new Error('Invalid submission type.');
     result.ok=true;

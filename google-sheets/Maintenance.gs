@@ -31,6 +31,10 @@ function validateMaintenance_(entry) {
 }
 function saveMaintenance(entry,staffSession) {
   requireStaffSession_(staffSession);
+  return saveMaintenance_(entry);
+}
+/** Public app submission core. Private underscore prevents direct google.script.run calls. */
+function saveMaintenance_(entry) {
   validateMaintenance_(entry);
   const lock=LockService.getScriptLock(); lock.waitLock(30000);
   try {

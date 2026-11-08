@@ -28,14 +28,14 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
     await route.fulfill({contentType:'text/html',body:'<script>window.top.postMessage('+JSON.stringify(result)+',"http://127.0.0.1:8008")</script>'});
    });
    const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-   await page.goto('http://127.0.0.1:8008/app/');
-   await page.getByRole('link',{name:'Field Tickets',exact:true}).click();
+   await page.goto('http://127.0.0.1:8008/');
+   await page.getByRole('link',{name:'FIELD TICKETS',exact:true}).click();
    await page.getByRole('dialog').waitFor();
    assert(await page.locator('.staff-pin-overlay').isVisible());
    await page.locator('#staff-pin-input').focus();await page.keyboard.press('Shift+Tab');
    assert(await page.locator('.staff-pin-cancel').evaluate(el=>el===document.activeElement));
    await page.keyboard.press('Escape');assert.equal(await page.getByRole('dialog').count(),0);
-   await page.getByRole('link',{name:'Field Tickets',exact:true}).click();
+   await page.getByRole('link',{name:'FIELD TICKETS',exact:true}).click();
    await page.locator('#staff-pin-input').fill('0000');await page.getByRole('button',{name:'Unlock',exact:true}).click();
    await page.getByText('Incorrect PIN. Please try again.',{exact:true}).waitFor();
    await page.locator('#staff-pin-input').fill('2468');await page.getByRole('button',{name:'Unlock',exact:true}).click();

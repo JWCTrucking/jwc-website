@@ -23,3 +23,5 @@ const major=JSON.parse(JSON.stringify(valid));major.id='report-major';major.item
 failMail=true;assert.throws(()=>context.savePretrip({...valid,id:'ambiguous'},'token'),/not confirmed/);const attempts=sent;assert.throws(()=>context.savePretrip({...valid,id:'ambiguous'},'token'),/needs checking/);assert.equal(sent,attempts);
 failMail=false;quota=0;assert.throws(()=>context.savePretrip({...valid,id:'quota'},'token'),/quota/);quota=10;context.savePretrip({...valid,id:'quota'},'token');assert.equal(rows.at(-1)[3],'sent');
 console.log('PASS: Alberta required fields, signatures, defects, staff auth, archived PDF, fixed recipient, same-ID retries, immutable records, ambiguous email protection and quota recovery.');
+
+authorized=false;failMail=false;assert.throws(()=>context.savePretrip(valid,"token"),/PIN_REQUIRED/);assert.equal(context.savePretrip_(valid).pretripPdfEmailed,true);console.log("PASS: public app submission core needs no PIN; legacy RPC remains protected.");

@@ -1,5 +1,5 @@
-const CACHE = 'jwc-field-app-v23';
-const ASSETS = ['./','./index.html','./forms.html','./pretrip.html','./safety.html','./safety.js?v=1','./nsc-standard-13.pdf','./pretrip.js?v=2','./pretrip-data.js?v=1','./forms.js?v=safari2','./ids.js?v=safari2','./access-config.js?v=pin1','./staff-access.js?v=safari2','./alerts.html','./form-ui.css','./manifest.webmanifest','./jwc-icon-192.png','./jwc-icon-512.png','../assets/jwc-logo.png','../assets/jwc-logo-form.png','../assets/jwc-hero.png'];
+const CACHE = 'jwc-field-app-v24';
+const ASSETS = ['./','./index.html','./forms.html','./pretrip.html','./safety.html','./safety.js?v=2','./nsc-standard-13.pdf','./pretrip.js?v=3','./pretrip-data.js?v=1','./forms.js?v=nopin1','./ids.js?v=safari2','./access-config.js?v=siteonly1','./staff-access.js?v=access3','./alerts.html','./form-ui.css','./manifest.webmanifest','./jwc-icon-192.png','./jwc-icon-512.png','../assets/jwc-logo.png','../assets/jwc-logo-form.png','../assets/jwc-hero.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('jwc-field-app-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{

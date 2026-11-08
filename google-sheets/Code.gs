@@ -80,6 +80,10 @@ function repairTruckTotals_(sheet) {
 }
 function saveTickets(tickets,staffSession) {
   requireStaffSession_(staffSession);
+  return saveTickets_(tickets);
+}
+/** Public app submission core. Private underscore prevents direct google.script.run calls. */
+function saveTickets_(tickets) {
   if (!Array.isArray(tickets) || !tickets.length || tickets.length>200) throw new Error('Send between 1 and 200 tickets.');
   tickets.forEach(validateTicket);
   const id=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');

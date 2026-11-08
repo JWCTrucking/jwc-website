@@ -30,8 +30,13 @@ function pretripPdf_(entry){
  doc.saveAndClose();return DriveApp.getFileById(doc.getId()).getAs(MimeType.PDF).setName('JWC-pretrip-'+entry.date+'-'+entry.id+'.pdf');
  }finally{DriveApp.getFileById(doc.getId()).setTrashed(true);}
 }
-function savePretrip(entry,session){
- requireStaffSession_(session);validatePretrip_(entry);
+function savePretrip(entry,session) {
+  requireStaffSession_(session);
+  return savePretrip_(entry);
+}
+/** Public app submission core. Private underscore prevents direct google.script.run calls. */
+function savePretrip_(entry) {
+ validatePretrip_(entry);
  const lock=LockService.getScriptLock();lock.waitLock(30000);
  try{
  const bookId=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');if(!bookId)pretripError_('Inspection workbook is not configured.');

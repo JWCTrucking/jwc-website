@@ -37,8 +37,13 @@ function safetyPdf_(entry){
  doc.saveAndClose();return DriveApp.getFileById(doc.getId()).getAs(MimeType.PDF).setName('JWC-'+entry.kind+'-'+entry.date+'-'+entry.id+'.pdf');
  }finally{DriveApp.getFileById(doc.getId()).setTrashed(true);}
 }
-function saveSafety(entry,session){
- requireStaffSession_(session);validateSafety_(entry);
+function saveSafety(entry,session) {
+  requireStaffSession_(session);
+  return saveSafety_(entry);
+}
+/** Public app submission core. Private underscore prevents direct google.script.run calls. */
+function saveSafety_(entry) {
+ validateSafety_(entry);
  const lock=LockService.getScriptLock();lock.waitLock(30000);
  try{
  const bookId=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');if(!bookId)safetyError_('The JWC workbook is not configured.');

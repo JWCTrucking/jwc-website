@@ -1,6 +1,6 @@
 # Alberta daily truck and trailer inspection
 
-The app's Truck & Trailer Pre-trip button opens `app/pretrip.html` inside the existing PIN-protected app. It records all 23 NSC Standard 13 Part 2 Schedule 1 categories separately for tractor and trailer, defect details or N/A reasons, required inspection identifiers, readings and electronic signature declarations. Major defects prominently show DO NOT OPERATE. A major-defect report can still be submitted to dispatch; submission never authorizes vehicle operation.
+The app's Truck & Trailer Pre-trip button opens `app/pretrip.html` inside the app without a PIN. It records all 23 NSC Standard 13 Part 2 Schedule 1 categories separately for tractor and trailer, defect details or N/A reasons, required inspection identifiers, readings and electronic signature declarations. Major defects prominently show DO NOT OPERATE. A major-defect report can still be submitted to dispatch; submission never authorizes vehicle operation.
 
 The fixed recipient is **dispach@jwchauling.com**, exactly as supplied by the owner. Do not silently change the spelling.
 
@@ -9,7 +9,7 @@ The fixed recipient is **dispach@jwchauling.com**, exactly as supplied by the ow
 1. Open the existing Apps Script project connected to the JWC workbook.
 2. Replace the existing main Code.gs with the complete regenerated **JWC-App-Update.gs**. This bundle already includes Pretrip.gs and the schedule category data; do not also paste those as separate files. Keep the separate QuickBooks and helper files and existing script properties.
 3. Save. As the owner, run `authorizePretrip` once and grant the requested Google permissions for private Drive PDFs, document creation, spreadsheet writes and email. The authorization function performs no email send and creates no report.
-4. Manage deployments → edit the existing web app → New version → Deploy. Keep the existing `/exec` URL, Execute as Me and access Anyone. The server still requires the JWC staff session. Do not run workbook setup or replace private properties.
+4. Manage deployments → edit the existing web app → New version → Deploy. Keep the existing `/exec` URL, Execute as Me and access Anyone. The public app POST receiver accepts this submission without a staff session. Do not run workbook setup or replace private properties.
 5. After deploying the frontend, perform one clearly identified test inspection and confirm the PDF arrives at **dispach@jwchauling.com**, the app offers a matching PDF download, and Pre-trip Log contains the report. Test a failure without clearing the draft. Local mocks do not prove Google authorization, PDF rendering or actual mailbox delivery.
 
 The account-level Google deployment cannot be updated through this repository. A GitHub push alone does not activate PDF emailing. An old backend fails confirmation and preserves the draft.

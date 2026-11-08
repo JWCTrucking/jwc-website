@@ -33,7 +33,7 @@ async function submit(kind){
   if(!navigator.onLine){view.status.textContent='No service. Your form is saved here. Tap Submit when service returns.';return;}
   button.disabled=true;button.textContent='Submitting…';view.form.querySelectorAll('fieldset').forEach(e=>e.disabled=true);view.status.textContent='Sending… Please keep this screen open.';
   try{await sendPacket(kind,data);try{localStorage.removeItem('jwc-form-'+kind+'-draft');}catch{}pending[kind]=null;view.form.reset();if(kind==='ticket')syncPermitField();view.date.value=today();window.scrollTo(0,0);view.status.textContent=kind==='maintenance'?'Maintenance submitted to Google Sheets.':'Ticket submitted to Google Sheets.';}
-  catch(error){view.status.textContent=error.message;if(error.code==='PIN_REQUIRED'){JWCStaffAccess.forget();JWCStaffAccess.require().then(()=>{view.status.textContent='Unlocked. Tap Submit to send your saved entry.';}).catch(()=>{});}}
+  catch(error){view.status.textContent=error.message;if(error.code==='PIN_REQUIRED'&&!JWCStaffAccess.enabled()){view.status.textContent='The Google script needs the app-without-PIN update deployed. Your entry is kept here.';}else if(error.code==='PIN_REQUIRED'){JWCStaffAccess.forget();JWCStaffAccess.require().then(()=>{view.status.textContent='Unlocked. Tap Submit to send your saved entry.';}).catch(()=>{});}}
   finally{button.disabled=false;button.textContent='Submit';view.form.querySelectorAll('fieldset').forEach(e=>e.disabled=false);}
 }
 $('form').onsubmit=e=>{e.preventDefault();void submit('ticket');};$('maintenance-form').onsubmit=e=>{e.preventDefault();void submit('maintenance');};

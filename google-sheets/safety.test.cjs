@@ -15,3 +15,5 @@ const result=context.saveSafety(valid,'token');assert.equal(result.safetyPdfEmai
 context.saveSafety({...valid,id:'toolbox-1',kind:'toolbox'},'token');assert.equal(sent,2);quota=0;assert.throws(()=>context.saveSafety({...valid,id:'quota'},'token'),/quota/);quota=10;context.saveSafety({...valid,id:'quota'},'token');assert.equal(rows.at(-1)[4],'sent');
 failMail=true;assert.throws(()=>context.saveSafety({...valid,id:'ambiguous'},'token'),/not confirmed/);const attempts=sent;assert.throws(()=>context.saveSafety({...valid,id:'ambiguous'},'token'),/needs checking/);assert.equal(sent,attempts);
 console.log('PASS: safety required fields, PNG limits, signatures in PDF template/private payload, staff auth, fixed dispatch recipient, immutable retries, quota recovery and ambiguous send protection.');
+
+authorized=false;failMail=false;assert.throws(()=>context.saveSafety(valid,"token"),/PIN_REQUIRED/);assert.equal(context.saveSafety_(valid).safetyPdfEmailed,true);console.log("PASS: public app submission core needs no PIN; legacy RPC remains protected.");

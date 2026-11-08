@@ -57,7 +57,7 @@ form.onsubmit=async event=>{
  submitting=true;const button=form.querySelector('[type=submit]');button.disabled=true;form.querySelectorAll('fieldset').forEach(f=>f.disabled=true);$('status').textContent='Creating signed PDF and emailing dispach@jwchauling.com…';
  try{const result=await deliver(data);const bytes=Uint8Array.from(atob(result.pdfBase64),c=>c.charCodeAt(0));if(pdfUrl)URL.revokeObjectURL(pdfUrl);pdfUrl=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));$('download').href=pdfUrl;$('download').download=result.pdfFilename||'JWC-safety.pdf';$('download').hidden=false;
  try{localStorage.removeItem(key);}catch{}form.reset();$('date').value=today();crew=[];$('crew').replaceChildren();recordId=window.JWCUuid();addPerson();$('status').textContent='Signed PDF emailed to dispach@jwchauling.com. Download your copy below.';$('download').scrollIntoView({block:'center'});
- }catch(error){$('status').textContent=error.message;if(error.code==='PIN_REQUIRED'){JWCStaffAccess.forget();await JWCStaffAccess.require().catch(()=>{});}}
+ }catch(error){$('status').textContent=error.message;if(error.code==='PIN_REQUIRED'&&!JWCStaffAccess.enabled()){$('status').textContent='The Google script needs the app-without-PIN update deployed. Your form is kept here.';}else if(error.code==='PIN_REQUIRED'){JWCStaffAccess.forget();await JWCStaffAccess.require().catch(()=>{});}}
  finally{submitting=false;button.disabled=false;form.querySelectorAll('fieldset').forEach(f=>f.disabled=false);}
 };
 if(window.parent!==window){document.body.classList.add('is-embedded');document.querySelector('.form-back').onclick=event=>{event.preventDefault();window.parent.postMessage({type:'JWC_CLOSE_FORM'},location.origin);};}
