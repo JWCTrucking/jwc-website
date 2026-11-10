@@ -36,7 +36,7 @@ button:disabled{opacity:.6}.status{margin:14px 0 0;font-size:14px;line-height:1.
 <script>
 /* Public half of the sheet's alert key (QuickBooks tab → "Alerts public key"). Not a secret. */
 const VAPID_PUBLIC_KEY='BL1WtUrgF8IxuizoOV1HXQtJgY55sR59be9Udf6QnP93CKRmz02XUWruIURKlW6MSYHpDTpgbHqWU19-rjyDjhA';
-const SUBMISSION_URL='https://script.google.com/macros/s/AKfycbxow0m-w5V3EntTTTdUQ6K2gQnUlPUaMWI_8qb3CrqeOZL5PcTqMjMsvWgmULSg-qDQqg/exec';
+const SUBMISSION_URL='https://script.google.com/macros/s/AKfycbyDBmkP_GMn8KjuI9stjkN04sVdd_vrVAqoH8Gv0gDElMG8KQkGvUVsDoJ4-oj7vcRfCg/exec';
 const $=id=>document.getElementById(id);
 function say(text,err){$('status').textContent=text;$('status').className='status'+(err?' err':'');}
 function keyBytes(b64){const s=atob((b64+'='.repeat((4-b64.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(s,c=>c.charCodeAt(0));}

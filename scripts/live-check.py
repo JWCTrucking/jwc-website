@@ -3,7 +3,7 @@ import sys
 import urllib.request
 
 BASE = 'https://www.jwchauling.com'
-GOOGLE = 'https://script.google.com/macros/s/AKfycbxow0m-w5V3EntTTTdUQ6K2gQnUlPUaMWI_8qb3CrqeOZL5PcTqMjMsvWgmULSg-qDQqg/exec'
+GOOGLE = 'https://script.google.com/macros/s/AKfycbyDBmkP_GMn8KjuI9stjkN04sVdd_vrVAqoH8Gv0gDElMG8KQkGvUVsDoJ4-oj7vcRfCg/exec'
 checks = [
     (BASE + '/', 'JWC Contracting Ltd.'),
     (BASE + '/app/', 'JWC Field App'),

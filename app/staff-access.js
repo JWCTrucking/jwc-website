@@ -1,6 +1,6 @@
 (()=>{
 const enabled=()=>window.JWC_ACCESS_CONFIG?.enabled===true;
-const endpoint='https://script.google.com/macros/s/AKfycbxow0m-w5V3EntTTTdUQ6K2gQnUlPUaMWI_8qb3CrqeOZL5PcTqMjMsvWgmULSg-qDQqg/exec';
+const endpoint='https://script.google.com/macros/s/AKfycbyDBmkP_GMn8KjuI9stjkN04sVdd_vrVAqoH8Gv0gDElMG8KQkGvUVsDoJ4-oj7vcRfCg/exec';
 const storageKey='jwc-staff-session';let current;
 let saved;try{saved=localStorage.getItem(storageKey);}catch{}
 if(!saved)try{saved=sessionStorage.getItem(storageKey);}catch{}

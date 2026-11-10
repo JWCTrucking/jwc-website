@@ -1,5 +1,5 @@
 /* JWC-owned forms. Google runs only the submission endpoint in a hidden response frame. */
-const SUBMISSION_URL='https://script.google.com/macros/s/AKfycbxow0m-w5V3EntTTTdUQ6K2gQnUlPUaMWI_8qb3CrqeOZL5PcTqMjMsvWgmULSg-qDQqg/exec';
+const SUBMISSION_URL='https://script.google.com/macros/s/AKfycbyDBmkP_GMn8KjuI9stjkN04sVdd_vrVAqoH8Gv0gDElMG8KQkGvUVsDoJ4-oj7vcRfCg/exec';
 const $=id=>document.getElementById(id);
 const pending={ticket:null,maintenance:null};
 const cleanupRequests=new Set();
