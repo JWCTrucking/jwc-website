@@ -1,4 +1,4 @@
-/** JWC ticket workbook and authenticated ticket app. Deploy as the user accessing the app. */
+/** JWC ticket workbook. Public website forms use doPost; deploy as owner with access Anyone. */
 const TARGET_SPREADSHEET_ID = '1-9vgsLWZLjXDXYxb24oecuvYh8_C2Nr2NtXJ1RKxTE4';
 const HEADERS = ['Ticket ID','Submitted','Date','Customer','Job number','Truck','Driver','Truck hours','Jeep','Booster','Tridem','Description','Updated','Billing quantity','Unit rate','Amount','Invoice number','Permits','Permit rate'];
 function setupWorkbook() {
@@ -88,7 +88,7 @@ function saveTickets_(tickets) {
   tickets.forEach(validateTicket);
   const id=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
   if (!id) throw new Error('Run setupWorkbook first.');
-  // Running as the visitor enforces the workbook sharing permissions for every request.
+  // The deployed owner must retain access to the private workbook.
   const sheet=SpreadsheetApp.openById(id).getSheetByName('Ticket Log');
   const lock=LockService.getScriptLock(); lock.waitLock(30000);
   try {

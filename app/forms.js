@@ -23,23 +23,30 @@ function sendPacket(kind,data){return new Promise((resolve,reject)=>{
   function message(event){let host;try{host=new URL(event.origin).hostname;}catch{return;}if(event.origin!=='https://script.google.com' && !/^https:\/\/[a-z0-9-]+\.googleusercontent\.com$/.test(event.origin))return;const result=event.data;if(!result||result.type!=='JWC_SUBMISSION_RESULT'||result.requestId!==requestId||result.id!==data.id)return;if(result.ok===true){if(kind==='ticket'&&(data.permits===true||data.hourlyRate!==''&&data.hourlyRate!=null||data.permitRate!==''&&data.permitRate!=null)&&result.ticketRatesPermits!==true){finish(new Error('Ticket details reached Sheets, but rates and permits were not confirmed. The Google app needs its new version deployed. Your entry is kept here; tap Submit again after the update.'));return;}finish();}else finish(Object.assign(new Error(result.message||'Not submitted. Your form has been kept. Tap Submit to retry.'),{code:result.code}));}
   messageWindow.addEventListener('message',message);document.body.append(frame,form);form.submit();
 });}
+function saveDraft(kind,data){
+  const draft=data||{...payload(kind),id:pending[kind]||window.JWCUuid()};
+  try{localStorage.setItem('jwc-form-'+kind+'-draft',JSON.stringify(draft));pending[kind]=draft.id;return true;}catch{return false;}
+}
 function controls(kind){return kind==='ticket'?{form:$('form'),status:$('status'),date:$('date')}:{form:$('maintenance-form'),status:$('maintenance-status'),date:$('service-date')};}
 async function submit(kind){
   const view=controls(kind),button=view.form.querySelector('[type=submit]');if(button.disabled)return;
   const data={...payload(kind),id:pending[kind]||window.JWCUuid()};
   if(kind==='maintenance'&&(!data.truck||!data.work||!data.performedBy)){view.status.textContent='Enter the truck, work done, and who did it.';return;}
   if(kind==='ticket'&&!data.driver.trim()){view.status.textContent='Enter the driver name.';return;}
-  try{localStorage.setItem('jwc-form-'+kind+'-draft',JSON.stringify(data));pending[kind]=data.id;}catch{view.status.textContent='Could not keep a backup on this device. Your form has not been cleared.';return;}
+  if(!saveDraft(kind,data)){view.status.textContent='Could not keep a backup on this device. Your form has not been cleared.';return;}
   if(!navigator.onLine){view.status.textContent='No service. Your form is saved here. Tap Submit when service returns.';return;}
   button.disabled=true;button.textContent='Submitting…';view.form.querySelectorAll('fieldset').forEach(e=>e.disabled=true);view.status.textContent='Sending… Please keep this screen open.';
   try{await sendPacket(kind,data);try{localStorage.removeItem('jwc-form-'+kind+'-draft');}catch{}pending[kind]=null;view.form.reset();if(kind==='ticket')syncPermitField();view.date.value=today();window.scrollTo(0,0);view.status.textContent=kind==='maintenance'?'Maintenance submitted to Google Sheets.':'Ticket submitted to Google Sheets.';}
-  catch(error){view.status.textContent=error.message;if(error.code==='PIN_REQUIRED'&&!JWCStaffAccess.enabled()){view.status.textContent='The Google script needs the app-without-PIN update deployed. Your entry is kept here.';}else if(error.code==='PIN_REQUIRED'){JWCStaffAccess.forget();JWCStaffAccess.require().then(()=>{view.status.textContent='Unlocked. Tap Submit to send your saved entry.';}).catch(()=>{});}}
+  catch(error){view.status.textContent=error.message;if(error.code==='PIN_REQUIRED'&&!JWCStaffAccess.enabled()){view.status.textContent='The submission service needs updating. Your entry is saved on this device. After the Google script is updated, tap Submit again.';}else if(error.code==='PIN_REQUIRED'){JWCStaffAccess.forget();JWCStaffAccess.require().then(()=>{view.status.textContent='Unlocked. Tap Submit to send your saved entry.';}).catch(()=>{});}}
   finally{button.disabled=false;button.textContent='Submit';view.form.querySelectorAll('fieldset').forEach(e=>e.disabled=false);}
 }
 $('form').onsubmit=e=>{e.preventDefault();void submit('ticket');};$('maintenance-form').onsubmit=e=>{e.preventDefault();void submit('maintenance');};
 for(const kind of ['ticket','maintenance']){
   const view=controls(kind);view.date.value=today();
   try{const saved=JSON.parse(localStorage.getItem('jwc-form-'+kind+'-draft')||'null');if(saved){pending[kind]=saved.id;if(kind==='ticket'){ticketFields.forEach(k=>$(k).value=saved[k]??'');['jeep','booster','tridem','permits'].forEach(k=>$(k).checked=!!saved[k]);}else for(const [field,id]of Object.entries({date:'service-date',truck:'service-truck',service:'service-type',performedBy:'service-person',odometer:'service-odometer',work:'service-work'}))$(id).value=saved[field]??'';view.status.textContent='Your unsent entry was restored. Tap Submit to retry.';}}catch{}
+}
+for(const kind of ['ticket','maintenance']){
+  for(const event of ['input','change'])controls(kind).form.addEventListener(event,()=>{if(kind==='ticket')syncPermitField();saveDraft(kind);});
 }
 syncPermitField();
 showView(new URLSearchParams(location.search).get('view'));

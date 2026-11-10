@@ -12,7 +12,8 @@ function doPost(e) {
     if(!/^[A-Za-z0-9_-]{1,100}$/.test(String(packet.requestId||'')))throw new Error('Invalid request.');
     result.requestId=packet.requestId;
     result.id=packet.payload && packet.payload.id;
-    if(packet.kind==='auth'){result.session=authenticateStaff_(packet.payload);result.staffPinAccess=true;}
+    if(packet.kind==='health'){result.appWithoutPin=true;result.ticketRatesPermits=true;result.protocolVersion='2026-11-no-pin';}
+    else if(packet.kind==='auth'){result.session=authenticateStaff_(packet.payload);result.staffPinAccess=true;}
     else if(packet.kind==='session'){requireStaffSession_(packet.sessionToken);result.staffPinAccess=true;}
     else if(packet.kind==='ticket'){saveTickets_([packet.payload]);result.ticketRatesPermits=true;result.staffPinAccess=true;}
     else if(packet.kind==='safety')Object.assign(result,saveSafety_(packet.payload));

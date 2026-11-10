@@ -1,5 +1,18 @@
 # Google Sheets ticket workflow
 
+## Current deployment: fixing the old PIN error
+
+The first-party app at https://www.jwchauling.com/app/ intentionally requires no PIN. A deployed script that replies `PIN_REQUIRED` is stale. Replace the existing main **Code.gs** contents with the complete **JWC-App-Update.gs** from this folder. Keep separate QuickBooks/helper files and all script properties. Do not paste the update beside the old Code.gs and do not run workbook setup.
+
+Save, then **Deploy → Manage deployments → pencil on the existing web app → Version: New version → Deploy**. The web app must execute as the owner and allow Anyone. Keep the existing deployment URL. Saving the editor alone does not update the live app. After deployment, reopen the field ticket and tap Submit once; its saved ID is reused to avoid a duplicate row.
+
+The updated receiver also accepts a read-only `health` packet and reports `appWithoutPin: true`; no spreadsheet row is created. The website autosaves ticket and maintenance drafts on input and keeps them after a PIN/deployment failure.
+
+## Original authenticated setup (historical)
+
+The instructions below describe the original Google-hosted version; use the current deployment instructions above for the public first-party app.
+
+
 This project prepares a live, authenticated version of the ticket app. The website and /tickets/ entry point now open the supplied Google Apps Script deployment. Google sign-in and workbook edit access are required. This repository does not automatically deploy updated Apps Script code.
 
 ## One-time Google setup

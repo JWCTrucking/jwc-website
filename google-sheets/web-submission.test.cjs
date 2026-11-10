@@ -15,3 +15,8 @@ const beforeLarge=writes.length;
 ctx.doPost({parameter:{packet:JSON.stringify({...packet,kind:'ticket',payload:{id:'too-large-ticket',notes:'x'.repeat(60000)}})}});assert.equal(writes.length,beforeLarge);assert(output.includes('"ok":false'));
 ctx.doPost({parameter:{packet:JSON.stringify({...packet,kind:'safety',payload:{id:'large-safety',signature:'x'.repeat(60000)}})}});assert.equal(writes.length,beforeLarge+1);assert(output.includes('"ok":true'));
 ctx.doPost({parameter:{packet:JSON.stringify({...packet,kind:'safety',payload:{id:'too-large-safety',signature:'x'.repeat(250000)}})}});assert.equal(writes.length,beforeLarge+1);assert(output.includes('"ok":false'));console.log('PASS: larger safety packets permitted; other kinds retain their cap and oversized safety packets are rejected.');
+
+const beforeHealth=writes.length;
+ctx.doPost({parameter:{packet:JSON.stringify({...packet,kind:'health'})}});
+assert.equal(writes.length,beforeHealth);assert(output.includes('"appWithoutPin":true'));assert(output.includes('"ok":true'));
+console.log('PASS: read-only health confirms no-PIN deployment without writing a ticket.');
